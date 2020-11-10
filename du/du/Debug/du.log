@@ -1,6 +1,1 @@
-﻿  du.c
-C:\Users\bill_\source\repos\du\du\du\du.c(284,134): error C4996: '_wcserror': This function or variable may be unsafe. Consider using _wcserror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\bill_\source\repos\du\du\du\du.c(289,144): error C4996: '_wcserror': This function or variable may be unsafe. Consider using _wcserror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\bill_\source\repos\du\du\du\du.c(305,123): error C4996: '_wcserror': This function or variable may be unsafe. Consider using _wcserror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\bill_\source\repos\du\du\du\du.c(310,123): error C4996: '_wcserror': This function or variable may be unsafe. Consider using _wcserror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\bill_\source\repos\du\du\du\du.c(315,149): error C4996: '_wcserror': This function or variable may be unsafe. Consider using _wcserror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+﻿
