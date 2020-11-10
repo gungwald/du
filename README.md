@@ -1,2 +1,2 @@
 # du
-A Windows implementation of the Linux or UNIX "du" command line program that displays disk usage. The current available options are ported from Linux and do not display the correct results.
+A Windows implementation of the Linux or UNIX "du" command. The name is a shorthand for "disk usage". It is a command line program that displays the disk space used by the files or directories that you specify. For directories (or folders in Microsoft terminology) it displays the cumulative size of all files and directories contained in the directory. The current available Windows versions of this program are ported from Linux and do not display the correct results.
