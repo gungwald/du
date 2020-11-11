@@ -5,24 +5,35 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "du", "du\du.vcxproj", "{5767C101-1BE7-4D5C-90DF-8B658918C11F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2C9F7C22-55C5-4144-BBFB-089B573627E0}"
+	ProjectSection(SolutionItems) = preProject
+		..\du-example-run.png = ..\du-example-run.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
+		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|ARM = Release|ARM
+		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|ARM.ActiveCfg = Debug|ARM
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|ARM.Build.0 = Debug|ARM
+		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|ARM64.Build.0 = Debug|ARM64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|x64.ActiveCfg = Debug|x64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|x64.Build.0 = Debug|x64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|x86.ActiveCfg = Debug|Win32
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Debug|x86.Build.0 = Debug|Win32
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|ARM.ActiveCfg = Release|ARM
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|ARM.Build.0 = Release|ARM
+		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|ARM64.ActiveCfg = Release|ARM64
+		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|ARM64.Build.0 = Release|ARM64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|x64.ActiveCfg = Release|x64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|x64.Build.0 = Release|x64
 		{5767C101-1BE7-4D5C-90DF-8B658918C11F}.Release|x86.ActiveCfg = Release|Win32
