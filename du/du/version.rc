@@ -1,6 +1,8 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "build-number.h"
+#include "version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -51,30 +53,30 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,0,1
- PRODUCTVERSION 2,0,0,1
- FILEFLAGSMASK 0x3fL
+ FILEVERSION    VER_FILE_VERSION
+ PRODUCTVERSION VER_PRODUCT_VERSION
+ FILEFLAGSMASK  0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS      VER_FILEFLAGS
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS      VER_FILEFLAGS
 #endif
- FILEOS 0x40004L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
+ FILEOS         VER_FILEOS
+ FILETYPE       VER_FILETYPE
+ FILESUBTYPE    0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "Altered Mechanism"
-            VALUE "FileDescription", "A program to display the disk space used by files and directories"
-            VALUE "FileVersion", "2.0.0.1"
-            VALUE "InternalName", "du.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2020"
-            VALUE "OriginalFilename", "du.exe"
-            VALUE "ProductName", "Disk Usage"
-            VALUE "ProductVersion", "2.0.0.1"
+            VALUE "CompanyName",        VER_COMPANY_NAME_STR "\0"
+            VALUE "FileDescription",    VER_FILE_DESCRIPTION_STR "\0"
+            VALUE "FileVersion",        VER_FILE_VERSION_STR "\0"
+            VALUE "InternalName",       VER_INTERNAL_NAME_STR "\0"
+            VALUE "LegalCopyright",     VER_COPYRIGHT_STR "\0"
+            VALUE "OriginalFilename",   VER_ORIGINAL_FILENAME_STR "\0"
+            VALUE "ProductName",        VER_PRODUCTNAME_STR "\0"
+            VALUE "ProductVersion",     VER_PRODUCT_VERSION_STR "\0"
         END
     END
     BLOCK "VarFileInfo"
