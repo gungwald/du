@@ -1,7 +1,7 @@
 # Disk Usage - du.exe
 
 ### Description
-This is a Windows implementation of the UNIX and Linux ![du](https://man7.org/linux/man-pages/man1/du.1.html) command. The name is shorthand for "disk usage". It is a command line program that displays the disk space used by the files or directories that you specify. For directories, it can display the cumulative size of all files and directories contained in the directory. The currently available Windows versions of this program are ported from Linux and do not display correct results.
+This is a Windows implementation of the UNIX and Linux ![du](https://man7.org/linux/man-pages/man1/du.1.html) command. The name is shorthand for "disk usage". It is a command line program that displays the disk space used by the files or directories that you specify. For directories, it can display the cumulative size of all files and directories contained in the directory. The other currently available Windows versions of this program are ported from Linux and do not display correct results.
 
 ### Efficiency
 The code is written to be as fast and efficient as possible. It uses the Win32 API which is the fastest interface for Windows. 
