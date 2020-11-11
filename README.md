@@ -4,3 +4,5 @@ This is a Windows implementation of the UNIX (i.e. Linux, FreeBSD, MacOS X, Sola
 The code is written to be as fast and efficient as possible. It uses the Win32 API which is the fastest available programming interface for Windows. The Win32 API also allows it to work on older systems. It should work on systems as old as Windows 95 and possibly Windows 3.1 with Win32s installed. It is intended to work on Wine and ReactOS. If it doesn't work on a Windows system, that is a bug.
 
 It also has no dependencies. For example, it does not require a Visual C++ or Visual Basic runtime library. So you can drop the du.exe file on any Windows system and it will run.
+
+![Example](du-example-run.png)
