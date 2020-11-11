@@ -5,4 +5,6 @@ The code is written to be as fast and efficient as possible. It uses the Win32 A
 
 It also has no dependencies. For example, it does not require a Visual C++ or Visual Basic runtime library. So you can drop the du.exe file on any Windows system and it will run.
 
+This currently builds with Microsoft Visual Studio Community 2019. That is currently the only way to generate executables for Windows ARM. I would like to build it in Fedora Linux with mingw32. That will build the x86 and x64 versions, but not the ARM versions. I'm waiting for a solution for that.
+
 ![Example](du-example-run.png)
