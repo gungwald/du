@@ -54,5 +54,8 @@
     <None Include="increment-build-number.bat">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="create-release-zip-files.bat">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

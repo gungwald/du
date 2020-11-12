@@ -331,6 +331,7 @@
     <ResourceCompile Include="version.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="create-release-zip-files.bat" />
     <None Include="increment-build-number.bat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
