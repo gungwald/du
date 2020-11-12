@@ -96,7 +96,12 @@ _TCHAR *dirname(const _TCHAR *path)
 
 	duplicatePath = _tcsdup(path);
 	replaceAll(duplicatePath, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
-	lastBackslash = _tcsrchr(duplicatePath, '\\');		/* Find the last one. */
-	*lastBackslash = '\0';								/* Terminate the string at the last backslash. */
+	lastBackslash = _tcsrchr(duplicatePath, '\\');		/* Find the last backslash. */
+	if (lastBackslash != NULL) {
+		*lastBackslash = '\0';							/* Terminate the string at the last backslash. */
+	}
+	else {
+		*duplicatePath = '\0';							/* Make it an empty string. */
+	}
 	return duplicatePath;
 }

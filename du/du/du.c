@@ -68,6 +68,8 @@ static unsigned long getSize(const _TCHAR* fileName, bool isTopLevel);
 static unsigned long getSizeOfDirectory(const _TCHAR* name, bool isTopLevel);
 static unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel);
 static void displaySizesOfMatchingFiles(const _TCHAR* glob, bool isTopLevel);
+static _TCHAR *convertToLongPathEnabledForm(const _TCHAR *path);
+static _TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right);
 
 bool displayRegularFilesAlso = false;
 bool displayBytes = false;
@@ -241,7 +243,8 @@ unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
     DWORD lastError;
     unsigned long size = 0;
 
-    if ((searchPattern = concat(directoryName, FIND_ALL_PATTERN)) != NULL) {
+    searchPattern = buildPath(directoryName, _TEXT("*"));
+    if (searchPattern != NULL) {
         if ((findHandle = FindFirstFile(searchPattern, &fileProperties)) == INVALID_HANDLE_VALUE) {
             writeLastError(GetLastError(), _TEXT("failed to get handle for file search pattern"), searchPattern);
         }
@@ -249,7 +252,7 @@ unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
             while (moreDirectoryEntries) {
                 childFileName = fileProperties.cFileName;
                 if (_tcscmp(childFileName, _TEXT(".")) != 0 && _tcscmp(childFileName, _TEXT("..")) != 0) {
-                    if ((childPath = concat3(directoryName, DIR_SEPARATOR, childFileName)) != NULL) {
+                    if ((childPath = buildPath(directoryName, childFileName)) != NULL) {
                         size += getSize(childPath, false);  /* RECURSION */
                         free(childPath);
                     }
@@ -282,7 +285,7 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
     unsigned long maxDWORD;
     _TCHAR *longPathName;
 
-    longPathName = concat(LONG_PATH_ENABLER, name);
+    longPathName = convertToLongPathEnabledForm(name);
     findHandle = FindFirstFile(longPathName, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
         writeLastError(GetLastError(), _TEXT("failed to get handle for file"), name);
@@ -306,8 +309,9 @@ unsigned long getSize(const _TCHAR* name, bool isTopLevel)
     unsigned long size = 0;
     _TCHAR *longPathName;
 
-    longPathName = concat(LONG_PATH_ENABLER, name);
-    if ((fileAttributes = GetFileAttributes(longPathName)) == INVALID_FILE_ATTRIBUTES) {
+    longPathName = convertToLongPathEnabledForm(name);
+    fileAttributes = GetFileAttributes(longPathName);
+    if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
         writeLastError(GetLastError(), _TEXT("failed to get attributes for file"), name);
     }
     else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -318,4 +322,32 @@ unsigned long getSize(const _TCHAR* name, bool isTopLevel)
     }
     free(longPathName);
     return size;
+}
+
+/* Result must be freed. */
+_TCHAR *convertToLongPathEnabledForm(const _TCHAR *path)
+{
+    _TCHAR *longPathEnabled;
+
+    if (_tcscmp(path, _TEXT(".")) == 0) {
+        longPathEnabled = _tcsdup(path);
+    }
+    else {
+        longPathEnabled = concat(LONG_PATH_ENABLER, path);
+    }
+    return longPathEnabled;
+}
+
+/* Result must be freed. */
+_TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right)
+{
+    _TCHAR *path;
+
+    if (_tcscmp(left, _TEXT(".")) == 0) {
+        path = _tcsdup(right);    /* Drop the . for current directory because it causes problems */
+    }
+    else {
+        path = concat3(left, DIR_SEPARATOR, right);
+    }
+    return path;
 }
