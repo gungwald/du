@@ -18,6 +18,12 @@
     <ClCompile Include="du.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="string-utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="error-handling.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -27,6 +33,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="build-number.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string-utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="error-handling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="du.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

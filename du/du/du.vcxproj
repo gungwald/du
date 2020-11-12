@@ -316,10 +316,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="du.c" />
+    <ClCompile Include="error-handling.c" />
+    <ClCompile Include="string-utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="build-number.h" />
+    <ClInclude Include="du.h" />
+    <ClInclude Include="error-handling.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="string-utils.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

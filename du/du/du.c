@@ -40,19 +40,25 @@
 #include <stdbool.h>
 #include <windows.h>
 #include <tchar.h>      
-#include <lmerr.h>
 #include "build-number.h"
 #include "version.h"
+#include "string-utils.h"
+#include "error-handling.h"
 
   /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
 #endif
 
-#define ERROR_TEXT_CAPACITY 128
+#ifdef _UNICODE
+#define LONG_PATH_ENABLER _TEXT("\\\\?\\")
+#else
+#define LONG_PATH_ENABLER ""
+#endif
 
-static bool isGlob(const _TCHAR* fileName);
-static void displayErrorText(DWORD errorCode);
+#define DIR_SEPARATOR _TEXT("\\")
+#define FIND_ALL_PATTERN _TEXT("\\*")
+
 static void usage();
 static void version();
 static int removeElement(int argc, _TCHAR* argv[], int elementNumber);
@@ -62,17 +68,11 @@ static unsigned long getSize(const _TCHAR* fileName, bool isTopLevel);
 static unsigned long getSizeOfDirectory(const _TCHAR* name, bool isTopLevel);
 static unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel);
 static void displaySizesOfMatchingFiles(const _TCHAR* glob, bool isTopLevel);
-static void writeError(errno_t errorCode, const _TCHAR* message, const _TCHAR* object);
-static void writeError2(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2);
-static void writeError3(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2, const _TCHAR* object3);
-static void writeLastError(DWORD lastError, const _TCHAR* message, const _TCHAR* object);
-static _TCHAR* concat(const _TCHAR* left, const _TCHAR* right);
-static _TCHAR* concat3(const _TCHAR* first, const _TCHAR* second, const _TCHAR* third);
 
-static bool displayRegularFilesAlso = false;
-static bool displayBytes = false;
-static bool summarize = false;
-static _TCHAR* programName;
+bool displayRegularFilesAlso = false;
+bool displayBytes = false;
+bool summarize = false;
+_TCHAR* programName;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -99,87 +99,6 @@ int _tmain(int argc, _TCHAR* argv[])
     return EXIT_SUCCESS;
 }
 
-bool isGlob(const _TCHAR* argument)
-{
-    return _tcschr(argument, _TEXT('*')) != NULL || _tcschr(argument, _TEXT('?')) != NULL;
-}
-
-void displaySizesOfMatchingFiles(const _TCHAR* glob, bool isTopLevel)
-{
-    HANDLE findHandle;
-    WIN32_FIND_DATA fileProperties;
-    bool doneWithThisArgument = false;
-    DWORD lastError;
-    const _TCHAR *fileName;
-
-    if ((findHandle = FindFirstFile(glob, &fileProperties)) == INVALID_HANDLE_VALUE) {
-        writeLastError(GetLastError(), _TEXT("Failed to get handle for search pattern"), glob);
-    }
-    else {
-        doneWithThisArgument = false;
-        while (!doneWithThisArgument) {
-            fileName = fileProperties.cFileName;
-            if (_tcscmp(fileName, _TEXT(".")) != 0 && _tcscmp(fileName, _TEXT("..")) != 0) {
-                getSize(fileName, true);
-            }
-            if (!FindNextFile(findHandle, &fileProperties)) {
-                lastError = GetLastError();
-                if (lastError == ERROR_NO_MORE_FILES) {
-                    doneWithThisArgument = true;
-                }
-                else {
-                    writeLastError(lastError, _TEXT("Failed to get next file matching pattern"), glob);
-                }
-            }
-        }
-        FindClose(findHandle);  /* Only close it if it got opened successfully */
-    }
-}
-
-/* This function was taken from Microsoft's Knowledge Base Article 149409
-   and modified to fix the formatting. */
-void displayErrorText(DWORD errorCode)
-{
-    HMODULE moduleHandle = NULL; /* default to system source */
-    _TCHAR* message;
-    DWORD bufferLength;
-    DWORD numberOfBytesWritten;
-
-    /* If errorCode is in the network range, load the message source */
-    if (errorCode >= NERR_BASE && errorCode <= MAX_NERR) {
-        moduleHandle = LoadLibraryEx(_TEXT("netmsg.dll"), NULL, LOAD_LIBRARY_AS_DATAFILE);
-        if (moduleHandle == NULL) {
-            /* Can't call writeLastError because that could cause an infinite recursive failure loop. */
-            _ftprintf(stderr, _TEXT("Failed to load library netmsg.dll: error number %d\n"), GetLastError());
-        }
-    }
-
-    /* Call FormatMessage() to allow for message text to be acquired
-       from the system or the supplied module handle */
-    bufferLength = FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_IGNORE_INSERTS |
-        FORMAT_MESSAGE_FROM_SYSTEM | /* always consider system table */
-        ((moduleHandle != NULL) ? FORMAT_MESSAGE_FROM_HMODULE : 0),
-        moduleHandle, /* Module to get message from (NULL == system) */
-        errorCode,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-        (LPTSTR)&message,
-        0,
-        NULL);
-
-    if (bufferLength) {
-        /* Output message string on stderr */
-        WriteFile(GetStdHandle(STD_ERROR_HANDLE), message, bufferLength, &numberOfBytesWritten, NULL);
-        /* Free the buffer allocated by the system */
-        LocalFree(message);
-    }
-    /* If you loaded a message source, unload it */
-    if (moduleHandle != NULL) {
-        FreeLibrary(moduleHandle);
-    }
-}
-
 void usage()
 {
     _putts(_TEXT("Usage: du [OPTION]... [FILE]..."));
@@ -201,10 +120,10 @@ void usage()
 void version()
 {
     _tprintf(_TEXT("du for Windows - Version %d.%d.%d.%d\n"), VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD);
-    _putts(_TEXT("Copyright(c) 2004, 2020 William L Chatfield"));
+    _putts(_TEXT(VER_COPYRIGHT_STR));
     _putts(_TEXT("Distributed under the GNU General Public License v3."));
     _putts(_TEXT(""));
-    _putts(_TEXT("This du is written to the native WIN32 C API so that"));
+    _putts(_TEXT("This du is written to the native Win32 API so that"));
     _putts(_TEXT("it will be as fast as possible.  It does not depend"));
     _putts(_TEXT("on any special UNIX emulation libraries.  It also"));
     _putts(_TEXT("displays correct values for file and directory sizes"));
@@ -273,67 +192,42 @@ void printFileSize(const _TCHAR* fileName, unsigned long size)
     _tprintf(_TEXT("%-7lu %s\n"), size, fileName);
 }
 
-_TCHAR* concat(const _TCHAR* left, const _TCHAR* right)
+void displaySizesOfMatchingFiles(const _TCHAR* searchPattern, bool isTopLevel)
 {
-    size_t capacity;
-    _TCHAR* result;
-    errno_t errorCode;
+    HANDLE findHandle;
+    WIN32_FIND_DATA fileProperties;
+    bool moreMatchesForThisArgument = true;
+    DWORD lastError;
+    const _TCHAR *fileName;
+    _TCHAR* searchDirectory;
+    _TCHAR *path;
 
-    capacity = _tcslen(left) + _tcslen(right) + 1;
-    if ((result = (_TCHAR*)malloc(capacity * sizeof(_TCHAR))) != NULL) {
-        if ((errorCode = _tcscpy_s(result, capacity, left)) == 0) {
-            if ((errorCode = _tcscat_s(result, capacity, right)) != 0) {
-                writeError2(errorCode, _TEXT("Count will be off because string concatenation failed"), result, right);
-                free(result);
-                result = NULL;
-            }
-        }
-        else {
-            writeError(errorCode, _TEXT("Count will be off because string copy failed"), left);
-            free(result);
-            result = NULL;
-        }
+    findHandle = FindFirstFile(searchPattern, &fileProperties);
+    if (findHandle == INVALID_HANDLE_VALUE) {
+        writeLastError(GetLastError(), _TEXT("failed to get handle for search pattern"), searchPattern);
     }
     else {
-        writeError2(errno, _TEXT("Memory allocation failed for string concatenation"), left, right);
-        exit(EXIT_FAILURE);
-    }
-    return result;
-}
-
-_TCHAR* concat3(const _TCHAR* first, const _TCHAR* second, const _TCHAR* third)
-{
-    size_t requiredCapacity;
-    errno_t errorCode;
-    _TCHAR* result;
-
-    requiredCapacity = _tcslen(first) + _tcslen(second) + _tcslen(third) + 1;
-    if ((result = (_TCHAR*)malloc(requiredCapacity * sizeof(_TCHAR))) != NULL) {
-        if ((errorCode = _tcscpy_s(result, requiredCapacity, first)) == 0) {
-            if ((errorCode = _tcscat_s(result, requiredCapacity, second)) == 0) {
-                if ((errorCode = _tcscat_s(result, requiredCapacity, third)) != 0) {
-                    writeError2(errorCode, _TEXT("Count will be off because string concatenation failed"), result, third);
-                    free(result);
-                    result = NULL;
+        searchDirectory = dirname(searchPattern);
+        while (moreMatchesForThisArgument) {
+            fileName = fileProperties.cFileName;
+            if (_tcscmp(fileName, _TEXT(".")) != 0 && _tcscmp(fileName, _TEXT("..")) != 0) {
+                path = concat3(searchDirectory, DIR_SEPARATOR, fileName);   /* Make sure the file can be found later. */
+                getSize(path, true);
+                free(path);
+            }
+            if (!FindNextFile(findHandle, &fileProperties)) {
+                lastError = GetLastError();
+                if (lastError == ERROR_NO_MORE_FILES) {
+                    moreMatchesForThisArgument = false;
+                }
+                else {
+                    writeLastError(lastError, _TEXT("failed to get next file matching pattern"), searchPattern);
                 }
             }
-            else {
-                writeError2(errorCode, _TEXT("Count will be off because string concatenation failed"), result, second);
-                free(result);
-                result = NULL;
-            }
         }
-        else {
-            writeError(errorCode, _TEXT("Count will be off because string copy failed"), first);
-            free(result);
-            result = NULL;
-        }
+        free(searchDirectory);
+        FindClose(findHandle);  /* Only close it if it got opened successfully */
     }
-    else {
-        writeError3(errno, _TEXT("Memory allocation failed for string concatenation"), first, second, third);
-        exit(EXIT_FAILURE);
-    }
-    return result;
 }
 
 unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
@@ -347,15 +241,15 @@ unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
     DWORD lastError;
     unsigned long size = 0;
 
-    if ((searchPattern = concat(directoryName, _TEXT("\\*"))) != NULL) {
+    if ((searchPattern = concat(directoryName, FIND_ALL_PATTERN)) != NULL) {
         if ((findHandle = FindFirstFile(searchPattern, &fileProperties)) == INVALID_HANDLE_VALUE) {
-            writeLastError(GetLastError(), _TEXT("Failed to get handle for file listing"), searchPattern);
+            writeLastError(GetLastError(), _TEXT("failed to get handle for file search pattern"), searchPattern);
         }
         else {
             while (moreDirectoryEntries) {
                 childFileName = fileProperties.cFileName;
                 if (_tcscmp(childFileName, _TEXT(".")) != 0 && _tcscmp(childFileName, _TEXT("..")) != 0) {
-                    if ((childPath = concat3(directoryName, _TEXT("\\"), childFileName)) != NULL) {
+                    if ((childPath = concat3(directoryName, DIR_SEPARATOR, childFileName)) != NULL) {
                         size += getSize(childPath, false);  /* RECURSION */
                         free(childPath);
                     }
@@ -365,7 +259,7 @@ unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
                         moreDirectoryEntries = false;
                     }
                     else {
-                        writeLastError(lastError, _TEXT("Failed to get next file in directory"), searchPattern);
+                        writeLastError(lastError, _TEXT("failed to get next file search results"), searchPattern);
                     }
                 }
             }
@@ -386,10 +280,12 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
     unsigned long size = 0;
     unsigned long multiplier;
     unsigned long maxDWORD;
+    _TCHAR *longPathName;
 
-    findHandle = FindFirstFile(name, &fileProperties);
+    longPathName = concat(LONG_PATH_ENABLER, name);
+    findHandle = FindFirstFile(longPathName, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
-        writeLastError(GetLastError(), _TEXT("Failed to get handle for file"), name);
+        writeLastError(GetLastError(), _TEXT("failed to get handle for file"), name);
     }
     else {
         maxDWORD = (unsigned long)MAXDWORD;  /* Avoid Visual C++ 4.0 warning */
@@ -400,53 +296,26 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
             printFileSize(name, size);
         }
     }
+    free(longPathName);
     return size;
 }
 
-unsigned long getSize(const _TCHAR* fileName, bool isTopLevel)
+unsigned long getSize(const _TCHAR* name, bool isTopLevel)
 {
     DWORD fileAttributes;
     unsigned long size = 0;
+    _TCHAR *longPathName;
 
-    if ((fileAttributes = GetFileAttributes(fileName)) == INVALID_FILE_ATTRIBUTES) {
-        writeLastError(GetLastError(), _TEXT("Failed to attributes for file"), fileName);
+    longPathName = concat(LONG_PATH_ENABLER, name);
+    if ((fileAttributes = GetFileAttributes(longPathName)) == INVALID_FILE_ATTRIBUTES) {
+        writeLastError(GetLastError(), _TEXT("failed to get attributes for file"), name);
     }
     else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        size = getSizeOfDirectory(fileName, isTopLevel);    /* RECURSION */
+        size = getSizeOfDirectory(name, isTopLevel);    /* RECURSION */
     }
     else {
-        size = getSizeOfRegularFile(fileName, isTopLevel);
+        size = getSizeOfRegularFile(name, isTopLevel);
     }
+    free(longPathName);
     return size;
-}
-
-void writeError(errno_t errorCode, const _TCHAR* message, const _TCHAR* object)
-{
-    _TCHAR errorText[ERROR_TEXT_CAPACITY];
-
-    _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\": %s\n"), programName, message, object, errorText);
-}
-
-void writeError2(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2)
-{
-    _TCHAR errorText[ERROR_TEXT_CAPACITY];
-
-    _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\" and \"%s\": %s\n"), programName, message, object1, object2, errorText);
-}
-
-void writeError3(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2, const _TCHAR* object3)
-{
-    _TCHAR errorText[ERROR_TEXT_CAPACITY];
-
-    _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\", \"%s\" and \"%s\": %s\n"), programName, message, object1, object2, object3, errorText);
-}
-
-void writeLastError(DWORD lastError, const _TCHAR* message, const _TCHAR* object)
-{
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\": "), programName, message, object);
-    displayErrorText(lastError);
-    _fputts(_TEXT(""), stderr);  /* Write end of line */
 }
