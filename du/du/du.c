@@ -51,7 +51,7 @@
 #endif
 
 #ifdef _UNICODE
-#define LONG_PATH_ENABLER _TEXT("\\\\?\\")
+#define EXTENDED_LENGTH_PATH_PREFIX _TEXT("\\\\?\\")
 #else
 #define LONG_PATH_ENABLER ""
 #endif
@@ -68,12 +68,16 @@ static unsigned long getSize(const _TCHAR* fileName, bool isTopLevel);
 static unsigned long getSizeOfDirectory(const _TCHAR* name, bool isTopLevel);
 static unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel);
 static void displaySizesOfMatchingFiles(const _TCHAR* glob, bool isTopLevel);
-static _TCHAR *convertToLongPathEnabledForm(const _TCHAR *path);
+static _TCHAR *prefixForExtendedLengthPath(const _TCHAR *path);
 static _TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right);
+static _TCHAR *getAbsolutePath(const _TCHAR *path);
+static _TCHAR *getExtendedAbsolutePath(const _TCHAR *path);
+static bool isArgumentAbsolutePath(const _TCHAR *path);
 
 bool displayRegularFilesAlso = false;
 bool displayBytes = false;
 bool summarize = false;
+bool argumentIsAbsolutePath = false;
 _TCHAR* programName;
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -81,22 +85,33 @@ int _tmain(int argc, _TCHAR* argv[])
     int i;
     const _TCHAR *argument;
     int nonSwitchArgumentCount;
+    _TCHAR *absolutePath = NULL;
+    _TCHAR *prefixedPath = NULL;
 
     programName = argv[0];
     nonSwitchArgumentCount = setSwitches(argc, argv);
     if (nonSwitchArgumentCount > 1) {
         for (i = 1; i < nonSwitchArgumentCount; i++) {
             argument = argv[i];
+            argumentIsAbsolutePath = isArgumentAbsolutePath(argument);
+            absolutePath = getAbsolutePath(argument);
+            prefixedPath = prefixForExtendedLengthPath(absolutePath);
             if (isGlob(argument)) {  /* Will be true if compiled with Visual C++, but not with GCC. */
-                displaySizesOfMatchingFiles(argument, true);
+                displaySizesOfMatchingFiles(prefixedPath, true);
             }
             else {
-                getSize(argument, true);
+                getSize(prefixedPath, true);
             }
+            free(prefixedPath);
+            free(absolutePath);
         }
     }
     else {
-        getSize(_TEXT("."), true);
+        absolutePath = getAbsolutePath(_TEXT("."));
+        prefixedPath = prefixForExtendedLengthPath(absolutePath);
+        getSize(prefixedPath, true);
+        free(prefixedPath);
+        free(absolutePath);
     }
     return EXIT_SUCCESS;
 }
@@ -191,7 +206,7 @@ void printFileSize(const _TCHAR* fileName, unsigned long size)
             }
         }
     }
-    _tprintf(_TEXT("%-7lu %s\n"), size, fileName);
+	_tprintf(_TEXT("%-7lu %s\n"), size, fileName);
 }
 
 void displaySizesOfMatchingFiles(const _TCHAR* searchPattern, bool isTopLevel)
@@ -283,10 +298,8 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
     unsigned long size = 0;
     unsigned long multiplier;
     unsigned long maxDWORD;
-    _TCHAR *longPathName;
 
-    longPathName = convertToLongPathEnabledForm(name);
-    findHandle = FindFirstFile(longPathName, &fileProperties);
+    findHandle = FindFirstFile(name, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
         writeLastError(GetLastError(), _TEXT("failed to get handle for file"), name);
     }
@@ -299,43 +312,32 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
             printFileSize(name, size);
         }
     }
-    free(longPathName);
     return size;
 }
 
-unsigned long getSize(const _TCHAR* name, bool isTopLevel)
+unsigned long getSize(const _TCHAR* path, bool isTopLevel)
 {
     DWORD fileAttributes;
     unsigned long size = 0;
-    _TCHAR *longPathName;
+    _TCHAR *prefixedPath;
 
-    longPathName = convertToLongPathEnabledForm(name);
-    fileAttributes = GetFileAttributes(longPathName);
+    fileAttributes = GetFileAttributes(path);
     if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-        writeLastError(GetLastError(), _TEXT("failed to get attributes for file"), name);
+        writeLastError(GetLastError(), _TEXT("failed to get attributes for file"), path);
     }
     else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        size = getSizeOfDirectory(name, isTopLevel);    /* RECURSION */
+        size = getSizeOfDirectory(path, isTopLevel);    /* RECURSION */
     }
     else {
-        size = getSizeOfRegularFile(name, isTopLevel);
+        size = getSizeOfRegularFile(path, isTopLevel);
     }
-    free(longPathName);
     return size;
 }
 
 /* Result must be freed. */
-_TCHAR *convertToLongPathEnabledForm(const _TCHAR *path)
+_TCHAR *prefixForExtendedLengthPath(const _TCHAR *path)
 {
-    _TCHAR *longPathEnabled;
-
-    if (_tcscmp(path, _TEXT(".")) == 0) {
-        longPathEnabled = _tcsdup(path);
-    }
-    else {
-        longPathEnabled = concat(LONG_PATH_ENABLER, path);
-    }
-    return longPathEnabled;
+    return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
 /* Result must be freed. */
@@ -350,4 +352,53 @@ _TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right)
         path = concat3(left, DIR_SEPARATOR, right);
     }
     return path;
+}
+
+/* Result must be freed. */
+_TCHAR *getAbsolutePath(const _TCHAR *path)
+{
+    _TCHAR *absolutePath;
+    DWORD requiredBufferSize;
+    DWORD returnedPathLength;
+
+    /* Ask for the size of the buffer needed to hold the absolute path. */
+    requiredBufferSize = GetFullPathName(path, 0, NULL, NULL);
+    if (requiredBufferSize == 0) {
+        writeLastError(GetLastError(), _TEXT("failed to get buffer size required for file name"), path);
+        exit(EXIT_FAILURE);
+    }
+    else {
+        absolutePath = (_TCHAR *) malloc(requiredBufferSize * sizeof(_TCHAR));
+        if (absolutePath == NULL) {
+			writeError(errno, _TEXT("Memory allocation failed for absolute path of"), path);
+			exit(EXIT_FAILURE);
+        }
+        else {
+            returnedPathLength = GetFullPathName(path, requiredBufferSize, absolutePath, NULL);
+            if (returnedPathLength == 0) {
+                writeLastError(GetLastError(), _TEXT("failed to get full path name for "), path);
+            }
+            else if (returnedPathLength >= requiredBufferSize) {
+				writeLastError(GetLastError(), _TEXT("buffer was not big enough for "), path);
+				exit(EXIT_FAILURE);
+            }
+        }
+    }
+    return absolutePath;
+}
+
+_TCHAR *getExtendedAbsolutePath(const _TCHAR *path)
+{
+    _TCHAR *prefixedPath;
+    _TCHAR *absolutePath;
+
+    prefixedPath = prefixForExtendedLengthPath(path);
+    absolutePath = getAbsolutePath(prefixedPath);
+    free(prefixedPath);
+    return absolutePath;
+}
+
+bool isArgumentAbsolutePath(const _TCHAR *path)
+{
+    return path[0] == _TEXT('\\') || _tcschr(path, _TEXT(':')) != NULL;
 }
