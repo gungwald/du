@@ -20,97 +20,90 @@
  *
  ***************************************************************************/
 
- /*
-  * NOTES:
-  * <ol>
-  * <li>
-  * Win32 needs to be used rather than things like UWP because UWP limits
-  * the target platforms to Windows 10. It would not work on ReactOS or
-  * Wine, for example, if UWP were used.
-  * </li>
-  * <li>
-  * The recursive calculation of file sizes is very resource intensive so
-  * Win32 is also needed because it is the fastest API for Windows.
-  * </li>
-  * </ol>
-  */
+/*
+ * NOTES:
+ * <ol>
+ * <li>
+ * Win32 needs to be used rather than things like UWP because UWP limits
+ * the target platforms to Windows 10. It would not work on ReactOS or
+ * Wine, for example, if UWP were used.
+ * </li>
+ * <li>
+ * The recursive calculation of file sizes is very resource intensive so
+ * Win32 is also needed because it is the fastest API for Windows.
+ * </li>
+ * </ol>
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <windows.h>
-#include <tchar.h>      
+#include <tchar.h>
 #include "build-number.h"
 #include "version.h"
 #include "string-utils.h"
 #include "error-handling.h"
 
-  /* Visual C++ 4.0 does not define this. */
+/* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
 #endif
 
-#ifdef _UNICODE
-#define EXTENDED_LENGTH_PATH_PREFIX _TEXT("\\\\?\\")
+#ifdef UNICODE
+#define EXTENDED_LENGTH_PATH_PREFIX _T("\\\\?\\")
 #else
-#define LONG_PATH_ENABLER ""
+#define EXTENDED_LENGTH_PATH_PREFIX ""
 #endif
 
-#define DIR_SEPARATOR _TEXT("\\")
-#define FIND_ALL_PATTERN _TEXT("\\*")
+#define DEFAULT_PATH _T(".")
+#define DIR_SEPARATOR _T("\\")
+#define FIND_ALL_PATTERN _T("\\*")
 
 static void usage();
 static void version();
-static int removeElement(int argc, _TCHAR* argv[], int elementNumber);
-static int setSwitches(int argc, _TCHAR* argv[]);
-static void printFileSize(const _TCHAR* fileName, unsigned long size);
-static unsigned long getSize(const _TCHAR* fileName, bool isTopLevel);
-static unsigned long getSizeOfDirectory(const _TCHAR* name, bool isTopLevel);
-static unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel);
-static void displaySizesOfMatchingFiles(const _TCHAR* glob, bool isTopLevel);
-static _TCHAR *prefixForExtendedLengthPath(const _TCHAR *path);
-static _TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right);
-static _TCHAR *getAbsolutePath(const _TCHAR *path);
-static _TCHAR *getExtendedAbsolutePath(const _TCHAR *path);
-static bool isArgumentAbsolutePath(const _TCHAR *path);
+static int removeElement(int argc, TCHAR* argv[], int elementNumber);
+static int setSwitches(int argc, TCHAR* argv[]);
+static void printFileSize(const TCHAR* absolutePath, const TCHAR *origPathPtr, unsigned long size);
+static unsigned long getSize(const TCHAR* fileName, const TCHAR *origPathPtr, bool isTopLevel);
+static unsigned long getSizeOfDirectory(const TCHAR* name, const TCHAR *origPathPtr, bool isTopLevel);
+static unsigned long getSizeOfRegularFile(const TCHAR* name, const TCHAR *origPathPtr, bool isTopLevel);
+static void displaySizesOfMatchingFiles(const TCHAR* glob, const TCHAR *origPathPtr, bool isTopLevel);
+static TCHAR *prefixForExtendedLengthPath(const TCHAR *path);
+static TCHAR *buildPath(const TCHAR *left, const TCHAR *right);
+static TCHAR *getAbsolutePath(const TCHAR *path const TCHAR **origPathPtr);
 
 bool displayRegularFilesAlso = false;
 bool displayBytes = false;
 bool summarize = false;
-bool argumentIsAbsolutePath = false;
-_TCHAR* programName;
+TCHAR *programName;
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int argc, TCHAR* argv[])
 {
     int i;
-    const _TCHAR *argument;
+    const TCHAR *argument;
     int nonSwitchArgumentCount;
-    _TCHAR *absolutePath = NULL;
-    _TCHAR *prefixedPath = NULL;
+    TCHAR *absolutePath = NULL;
+    TCHAR *origPathPtr;
 
     programName = argv[0];
     nonSwitchArgumentCount = setSwitches(argc, argv);
     if (nonSwitchArgumentCount > 1) {
         for (i = 1; i < nonSwitchArgumentCount; i++) {
             argument = argv[i];
-            argumentIsAbsolutePath = isArgumentAbsolutePath(argument);
-            absolutePath = getAbsolutePath(argument);
-            prefixedPath = prefixForExtendedLengthPath(absolutePath);
+            absolutePath = getAbsolutePath(argument, &origPathPtr);
             if (isGlob(argument)) {  /* Will be true if compiled with Visual C++, but not with GCC. */
-                displaySizesOfMatchingFiles(prefixedPath, true);
+                displaySizesOfMatchingFiles(absolutePath, origPathPtr, true);
             }
             else {
-                getSize(prefixedPath, true);
+                getSize(absolutePath, origPathPtr, true);
             }
-            free(prefixedPath);
             free(absolutePath);
         }
     }
     else {
-        absolutePath = getAbsolutePath(_TEXT("."));
-        prefixedPath = prefixForExtendedLengthPath(absolutePath);
-        getSize(prefixedPath, true);
-        free(prefixedPath);
+        absolutePath = getAbsolutePath(DEFAULT_PATH, &origPathPtr);
+        getSize(origPathPtr, absolutePath, true);
         free(absolutePath);
     }
     return EXIT_SUCCESS;
@@ -118,37 +111,37 @@ int _tmain(int argc, _TCHAR* argv[])
 
 void usage()
 {
-    _putts(_TEXT("Usage: du [OPTION]... [FILE]..."));
-    _putts(_TEXT("Summarize disk usage of each FILE, recursively for directories."));
-    _putts(_TEXT("File and directory sizes are written in kilobytes."));
-    _putts(_TEXT("1 kilobyte = 1024 bytes"));
-    _putts(_TEXT(""));
-    _putts(_TEXT("-a          write counts for all files, not just directories"));
-    _putts(_TEXT("-b          print size in bytes"));
-    _putts(_TEXT("-s          display only a total for each argument"));
-    _putts(_TEXT("-?, --help  display this help and exit"));
-    _putts(_TEXT("--version   output version information and exit"));
-    _putts(_TEXT(""));
-    _putts(_TEXT("Example: du -s *"));
-    _putts(_TEXT(""));
-    _putts(_TEXT("Report bugs https://github.com/gungwald/du"));
+    _putts(_T("Usage: du [OPTION]... [FILE]..."));
+    _putts(_T("Summarize disk usage of each FILE, recursively for directories."));
+    _putts(_T("File and directory sizes are written in kilobytes."));
+    _putts(_T("1 kilobyte = 1024 bytes"));
+    _putts(_T(""));
+    _putts(_T("-a          write counts for all files, not just directories"));
+    _putts(_T("-b          print size in bytes"));
+    _putts(_T("-s          display only a total for each argument"));
+    _putts(_T("-?, --help  display this help and exit"));
+    _putts(_T("--version   output version information and exit"));
+    _putts(_T(""));
+    _putts(_T("Example: du -s *"));
+    _putts(_T(""));
+    _putts(_T("Report bugs https://github.com/gungwald/du"));
 }
 
 void version()
 {
-    _tprintf(_TEXT("du for Windows - Version %d.%d.%d.%d\n"), VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD);
-    _putts(_TEXT(VER_COPYRIGHT_STR));
-    _putts(_TEXT("Distributed under the GNU General Public License v3."));
-    _putts(_TEXT(""));
-    _putts(_TEXT("This du is written to the native Win32 API so that"));
-    _putts(_TEXT("it will be as fast as possible.  It does not depend"));
-    _putts(_TEXT("on any special UNIX emulation libraries.  It also"));
-    _putts(_TEXT("displays correct values for file and directory sizes"));
-    _putts(_TEXT("unlike some other versions of du ported from UNIX-like"));
-    _putts(_TEXT("operating systems."));
+    _tprintf(_T("du for Windows - Version %d.%d.%d.%d\n"), VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD);
+    _putts(_T(VER_COPYRIGHT_STR));
+    _putts(_T("Distributed under the GNU General Public License v3."));
+    _putts(_T(""));
+    _putts(_T("This du is written to the native Win32 API so that"));
+    _putts(_T("it will be as fast as possible.  It does not depend"));
+    _putts(_T("on any special UNIX emulation libraries.  It also"));
+    _putts(_T("displays correct values for file and directory sizes"));
+    _putts(_T("unlike some other versions of du ported from UNIX-like"));
+    _putts(_T("operating systems."));
 }
 
-int removeElement(int argc, _TCHAR* argv[], int elementNumber)
+int removeElement(int argc, TCHAR* argv[], int elementNumber)
 {
     int i;
 
@@ -158,30 +151,30 @@ int removeElement(int argc, _TCHAR* argv[], int elementNumber)
     return i;
 }
 
-int setSwitches(int argc, _TCHAR* argv[])
+int setSwitches(int argc, TCHAR* argv[])
 {
     int i = 0;
     int newArgumentCount = 0;
 
     newArgumentCount = argc;
     while (i < newArgumentCount) {
-        if (_tcscmp(argv[i], _TEXT("/?")) == 0 || _tcscmp(argv[i], _TEXT("-?")) == 0 || _tcscmp(argv[i], _TEXT("--help")) == 0) {
+        if (_tcscmp(argv[i], _T("/?")) == 0 || _tcscmp(argv[i], _T("-?")) == 0 || _tcscmp(argv[i], _T("--help")) == 0) {
             usage();
             exit(EXIT_SUCCESS);
         }
-        else if (_tcscmp(argv[i], _TEXT("--version")) == 0) {
+        else if (_tcscmp(argv[i], _T("--version")) == 0) {
             version();
             exit(EXIT_SUCCESS);
         }
-        else if (_tcscmp(argv[i], _TEXT("/a")) == 0 || _tcscmp(argv[i], _TEXT("-a")) == 0) {
+        else if (_tcscmp(argv[i], _T("/a")) == 0 || _tcscmp(argv[i], _T("-a")) == 0) {
             displayRegularFilesAlso = true;
             newArgumentCount = removeElement(newArgumentCount, argv, i);
         }
-        else if (_tcscmp(argv[i], _TEXT("/b")) == 0 || _tcscmp(argv[i], _TEXT("-b")) == 0) {
+        else if (_tcscmp(argv[i], _T("/b")) == 0 || _tcscmp(argv[i], _T("-b")) == 0) {
             displayBytes = true;
             newArgumentCount = removeElement(newArgumentCount, argv, i);
         }
-        else if (_tcscmp(argv[i], _TEXT("/s")) == 0 || _tcscmp(argv[i], _TEXT("-s")) == 0) {
+        else if (_tcscmp(argv[i], _T("/s")) == 0 || _tcscmp(argv[i], _T("-s")) == 0) {
             summarize = true;
             newArgumentCount = removeElement(newArgumentCount, argv, i);
         }
@@ -190,13 +183,13 @@ int setSwitches(int argc, _TCHAR* argv[])
         }
     }
     if (displayRegularFilesAlso && summarize) {
-        _ftprintf(stderr, _TEXT("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
+        _ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
         exit(EXIT_FAILURE);
     }
     return newArgumentCount;
 }
 
-void printFileSize(const _TCHAR* fileName, unsigned long size)
+void printFileSize(const TCHAR *absolutePath, const TCHAR *origPathPtr, unsigned long size)
 {
     if (!displayBytes) {
         if (size > 0) {
@@ -206,31 +199,31 @@ void printFileSize(const _TCHAR* fileName, unsigned long size)
             }
         }
     }
-	_tprintf(_TEXT("%-7lu %s\n"), size, fileName);
+    _tprintf(_T("%-7lu %s\n"), size, origPathPtr);
 }
 
-void displaySizesOfMatchingFiles(const _TCHAR* searchPattern, bool isTopLevel)
+void displaySizesOfMatchingFiles(const TCHAR *absSearchPattern, const TCHAR *origPathPtr, bool isTopLevel)
 {
     HANDLE findHandle;
     WIN32_FIND_DATA fileProperties;
     bool moreMatchesForThisArgument = true;
     DWORD lastError;
-    const _TCHAR *fileName;
-    _TCHAR* searchDirectory;
-    _TCHAR *path;
+    const TCHAR *baseName;
+    TCHAR *absSearchDirectory;
+    TCHAR *absChildPath;
 
     findHandle = FindFirstFile(searchPattern, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
-        writeLastError(GetLastError(), _TEXT("failed to get handle for search pattern"), searchPattern);
+        writeLastError(GetLastError(), _T("failed to get handle for search pattern"), absSearchPattern);
     }
     else {
-        searchDirectory = dirname(searchPattern);
+        absSearchDirectory = dirname(absSearchPattern);
         while (moreMatchesForThisArgument) {
-            fileName = fileProperties.cFileName;
-            if (_tcscmp(fileName, _TEXT(".")) != 0 && _tcscmp(fileName, _TEXT("..")) != 0) {
-                path = concat3(searchDirectory, DIR_SEPARATOR, fileName);   /* Make sure the file can be found later. */
-                getSize(path, true);
-                free(path);
+            baseName = fileProperties.cFileName;
+            if (_tcscmp(baseName, _T(".")) != 0 && _tcscmp(baseName, _T("..")) != 0) {
+                absChildPath = buildPath(absSearchDirectory, baseName);
+                getSize(path, origPathPtr, true);
+                free(absChildPath);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
                 lastError = GetLastError();
@@ -238,38 +231,39 @@ void displaySizesOfMatchingFiles(const _TCHAR* searchPattern, bool isTopLevel)
                     moreMatchesForThisArgument = false;
                 }
                 else {
-                    writeLastError(lastError, _TEXT("failed to get next file matching pattern"), searchPattern);
+                    writeLastError(lastError, _T("failed to get next file matching pattern"), absSearchPattern);
                 }
             }
         }
-        free(searchDirectory);
+        free(absSearchDirectory);
         FindClose(findHandle);  /* Only close it if it got opened successfully */
     }
 }
 
-unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
+unsigned long getSizeOfDirectory(const TCHAR *absDirectoryPath, const TCHAR *origPathPtr, bool isTopLevel)
 {
     HANDLE findHandle;
     WIN32_FIND_DATA fileProperties;
     bool moreDirectoryEntries = true;
-    _TCHAR* searchPattern;
-    const _TCHAR* childFileName;
-    _TCHAR* childPath;
+    TCHAR *absSearchPattern;
+    const TCHAR *childBasename;
+    TCHAR *absChildPath;
     DWORD lastError;
     unsigned long size = 0;
 
-    searchPattern = buildPath(directoryName, _TEXT("*"));
-    if (searchPattern != NULL) {
-        if ((findHandle = FindFirstFile(searchPattern, &fileProperties)) == INVALID_HANDLE_VALUE) {
-            writeLastError(GetLastError(), _TEXT("failed to get handle for file search pattern"), searchPattern);
+    asbSearchPattern = buildPath(absDirectoryPath, _T("*"));
+    if (absSearchPattern != NULL) {
+        findHandle = FindFirstFile(absSearchPattern, &fileProperties)
+        if (fileHandle == INVALID_HANDLE_VALUE) {
+            writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), absSearchPattern);
         }
         else {
             while (moreDirectoryEntries) {
-                childFileName = fileProperties.cFileName;
-                if (_tcscmp(childFileName, _TEXT(".")) != 0 && _tcscmp(childFileName, _TEXT("..")) != 0) {
-                    if ((childPath = buildPath(directoryName, childFileName)) != NULL) {
-                        size += getSize(childPath, false);  /* RECURSION */
-                        free(childPath);
+                childBasename = fileProperties.cFileName;
+                if (_tcscmp(childBasename, _T(".")) != 0 && _tcscmp(childBasename, _T("..")) != 0) {
+                    if ((absChildPath = buildPath(directoryName, childBasename)) != NULL) {
+                        size += getSize(absChildPath, origPathPtr, false);  /* RECURSION */
+                        free(absChildPath);
                     }
                 }
                 if (!FindNextFile(findHandle, &fileProperties)) {
@@ -277,21 +271,21 @@ unsigned long getSizeOfDirectory(const _TCHAR* directoryName, bool isTopLevel)
                         moreDirectoryEntries = false;
                     }
                     else {
-                        writeLastError(lastError, _TEXT("failed to get next file search results"), searchPattern);
+                        writeLastError(lastError, _T("failed to get next file search results"), absSearchPattern);
                     }
                 }
             }
             FindClose(findHandle);  /* Only close it if it got opened successfully */
             if (!summarize || isTopLevel) {
-                printFileSize(directoryName, size);
+                printFileSize(absDirectoryPath, origPathPtr, size);
             }
         }
-        free(searchPattern);
+        free(absSearchPattern);
     }
     return size;
 }
 
-unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
+unsigned long getSizeOfRegularFile(const TCHAR *absolutePath, const TCHAR *origPathPtr, bool isTopLevel)
 {
     HANDLE findHandle;
     WIN32_FIND_DATA fileProperties;
@@ -299,53 +293,52 @@ unsigned long getSizeOfRegularFile(const _TCHAR* name, bool isTopLevel)
     unsigned long multiplier;
     unsigned long maxDWORD;
 
-    findHandle = FindFirstFile(name, &fileProperties);
+    findHandle = FindFirstFile(absolutePath, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
-        writeLastError(GetLastError(), _TEXT("failed to get handle for file"), name);
+        writeLastError(GetLastError(), _T("failed to get handle for file"), absolutePath);
     }
     else {
-        maxDWORD = (unsigned long)MAXDWORD;  /* Avoid Visual C++ 4.0 warning */
+        maxDWORD = (unsigned long) MAXDWORD;  /* Avoid Visual C++ 4.0 warning */
         multiplier = maxDWORD + 1UL;
         size = fileProperties.nFileSizeHigh * multiplier + fileProperties.nFileSizeLow;
         FindClose(findHandle);
         if (displayRegularFilesAlso || isTopLevel) {
-            printFileSize(name, size);
+            printFileSize(absolutePath, origPathPtr, size);
         }
     }
     return size;
 }
 
-unsigned long getSize(const _TCHAR* path, bool isTopLevel)
+unsigned long getSize(const TCHAR *absolutePath, const TCHAR *origPathPtr, bool isTopLevel)
 {
     DWORD fileAttributes;
     unsigned long size = 0;
-    _TCHAR *prefixedPath;
 
-    fileAttributes = GetFileAttributes(path);
+    fileAttributes = GetFileAttributes(absolutePath);
     if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-        writeLastError(GetLastError(), _TEXT("failed to get attributes for file"), path);
+        writeLastError(GetLastError(), _T("failed to get attributes for file"), absolutePath);
     }
     else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        size = getSizeOfDirectory(path, isTopLevel);    /* RECURSION */
+        size = getSizeOfDirectory(absolutePath, origPathPtr, isTopLevel);    /* RECURSION */
     }
     else {
-        size = getSizeOfRegularFile(path, isTopLevel);
+        size = getSizeOfRegularFile(absolutePath, origPathPtr, isTopLevel);
     }
     return size;
 }
 
 /* Result must be freed. */
-_TCHAR *prefixForExtendedLengthPath(const _TCHAR *path)
+TCHAR *prefixForExtendedLengthPath(const TCHAR *path)
 {
     return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
 /* Result must be freed. */
-_TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right)
+TCHAR *buildPath(const TCHAR *left, const TCHAR *right)
 {
-    _TCHAR *path;
+    TCHAR *path;
 
-    if (_tcscmp(left, _TEXT(".")) == 0) {
+    if (_tcscmp(left, _T(".")) == 0) {
         path = _tcsdup(right);    /* Drop the . for current directory because it causes problems */
     }
     else {
@@ -355,50 +348,43 @@ _TCHAR *buildPath(const _TCHAR *left, const _TCHAR *right)
 }
 
 /* Result must be freed. */
-_TCHAR *getAbsolutePath(const _TCHAR *path)
+TCHAR *getAbsolutePath(const TCHAR *path, const TCHAR **origPathPtr)
 {
-    _TCHAR *absolutePath;
+    TCHAR *absolutePath = NULL;
+    TCHAR *prefixedPath;
     DWORD requiredBufferSize;
     DWORD returnedPathLength;
 
+    prefixedPath = prefixForExtendedLengthPath(path);
+
     /* Ask for the size of the buffer needed to hold the absolute path. */
-    requiredBufferSize = GetFullPathName(path, 0, NULL, NULL);
+    requiredBufferSize = GetFullPathName(prefixedPath, 0, NULL, NULL);
     if (requiredBufferSize == 0) {
-        writeLastError(GetLastError(), _TEXT("failed to get buffer size required for file name"), path);
+        writeLastError(GetLastError(), _T("failed to get buffer size required for file name"), prefixedPath);
         exit(EXIT_FAILURE);
     }
     else {
-        absolutePath = (_TCHAR *) malloc(requiredBufferSize * sizeof(_TCHAR));
+        absolutePath = (TCHAR *) malloc(requiredBufferSize * sizeof(TCHAR));
         if (absolutePath == NULL) {
-			writeError(errno, _TEXT("Memory allocation failed for absolute path of"), path);
-			exit(EXIT_FAILURE);
+            writeError(errno, _T("memory allocation failed for absolute path of"), prefixedPath);
+            exit(EXIT_FAILURE);
         }
         else {
-            returnedPathLength = GetFullPathName(path, requiredBufferSize, absolutePath, NULL);
+            returnedPathLength = GetFullPathName(prefixedPath, requiredBufferSize, absolutePath, NULL);
             if (returnedPathLength == 0) {
-                writeLastError(GetLastError(), _TEXT("failed to get full path name for "), path);
+                writeLastError(GetLastError(), _T("failed to get full path name for "), prefixedPath);
             }
             else if (returnedPathLength >= requiredBufferSize) {
-				writeLastError(GetLastError(), _TEXT("buffer was not big enough for "), path);
-				exit(EXIT_FAILURE);
+                writeLastError(GetLastError(), _T("buffer was not big enough for "), prefixedPath);
+                exit(EXIT_FAILURE);
             }
         }
     }
+    if (absolutePath != NULL) {
+        *origPathPtr = strstr(absolutePath, path)
+        if (*origPathPtr == NULL) {
+            _ftprintf(stderr, _T("can't find original path %s in absolute path %s\n"), path, absolutePath);
+        }
+    }
     return absolutePath;
-}
-
-_TCHAR *getExtendedAbsolutePath(const _TCHAR *path)
-{
-    _TCHAR *prefixedPath;
-    _TCHAR *absolutePath;
-
-    prefixedPath = prefixForExtendedLengthPath(path);
-    absolutePath = getAbsolutePath(prefixedPath);
-    free(prefixedPath);
-    return absolutePath;
-}
-
-bool isArgumentAbsolutePath(const _TCHAR *path)
-{
-    return path[0] == _TEXT('\\') || _tcschr(path, _TEXT(':')) != NULL;
 }
