@@ -45,6 +45,18 @@
 #include "string-utils.h"
 #include "error-handling.h"
 
+#define TRACE
+#ifdef TRACE
+#define TRACE_ENTER(f,n,v) _tprintf(_T("Enter %s %s=%s\n"), f, n, v)
+#define TRACE_ENTER2(f,n,v,n2,v2) _tprintf(_T("Enter %s %s=%s %s=%s\n"), f, n, v, n2, v2)
+#define TRACE_RETURN(f,v)  _tprintf(_T("Return %s %s\n"), f, v)
+#define TRACE_RETURN_ULONG(f,v)  _tprintf(_T("Return %s %lu\n"), f, v)
+#else
+#define TRACE_ENTER(f,n,v)
+#define TRACE_ENTER2(f,n,v,n2,v2)
+#define TRACE_RETURN(f,v)
+#endif
+
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
@@ -71,14 +83,14 @@ static unsigned long getSizeOfRegularFile(const TCHAR* name, const TCHAR *origPa
 static void displaySizesOfMatchingFiles(const TCHAR* glob, const TCHAR *origPathPtr, bool isTopLevel);
 static TCHAR *prefixForExtendedLengthPath(const TCHAR *path);
 static TCHAR *buildPath(const TCHAR *left, const TCHAR *right);
-static TCHAR *getAbsolutePath(const TCHAR *path const TCHAR **origPathPtr);
+static TCHAR *getAbsolutePath(const TCHAR *path, TCHAR **origPathPtr);
 
 bool displayRegularFilesAlso = false;
 bool displayBytes = false;
 bool summarize = false;
 TCHAR *programName;
 
-int _tmain(int argc, TCHAR* argv[])
+int _tmain(int argc, TCHAR *argv[])
 {
     int i;
     const TCHAR *argument;
@@ -103,7 +115,7 @@ int _tmain(int argc, TCHAR* argv[])
     }
     else {
         absolutePath = getAbsolutePath(DEFAULT_PATH, &origPathPtr);
-        getSize(origPathPtr, absolutePath, true);
+        getSize(absolutePath, origPathPtr, true);
         free(absolutePath);
     }
     return EXIT_SUCCESS;
@@ -212,7 +224,9 @@ void displaySizesOfMatchingFiles(const TCHAR *absSearchPattern, const TCHAR *ori
     TCHAR *absSearchDirectory;
     TCHAR *absChildPath;
 
-    findHandle = FindFirstFile(searchPattern, &fileProperties);
+    TRACE_ENTER2(_T("displaySizesOfMatchingFiles"), _T("absSearchPattern"), absSearchPattern, _T("origPathPtr"), origPathPtr);
+
+    findHandle = FindFirstFile(absSearchPattern, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
         writeLastError(GetLastError(), _T("failed to get handle for search pattern"), absSearchPattern);
     }
@@ -222,7 +236,7 @@ void displaySizesOfMatchingFiles(const TCHAR *absSearchPattern, const TCHAR *ori
             baseName = fileProperties.cFileName;
             if (_tcscmp(baseName, _T(".")) != 0 && _tcscmp(baseName, _T("..")) != 0) {
                 absChildPath = buildPath(absSearchDirectory, baseName);
-                getSize(path, origPathPtr, true);
+                getSize(absChildPath, origPathPtr, true);
                 free(absChildPath);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
@@ -238,6 +252,7 @@ void displaySizesOfMatchingFiles(const TCHAR *absSearchPattern, const TCHAR *ori
         free(absSearchDirectory);
         FindClose(findHandle);  /* Only close it if it got opened successfully */
     }
+    TRACE_RETURN(_T("displaySizesOfMatchingFiles"), _T("void"));
 }
 
 unsigned long getSizeOfDirectory(const TCHAR *absDirectoryPath, const TCHAR *origPathPtr, bool isTopLevel)
@@ -251,17 +266,19 @@ unsigned long getSizeOfDirectory(const TCHAR *absDirectoryPath, const TCHAR *ori
     DWORD lastError;
     unsigned long size = 0;
 
-    asbSearchPattern = buildPath(absDirectoryPath, _T("*"));
+    TRACE_ENTER2(_T("getSizeOfDirectory"), _T("absDirectoryPath"), absDirectoryPath, _T("origPathPtr"), origPathPtr);
+
+    absSearchPattern = buildPath(absDirectoryPath, _T("*"));
     if (absSearchPattern != NULL) {
-        findHandle = FindFirstFile(absSearchPattern, &fileProperties)
-        if (fileHandle == INVALID_HANDLE_VALUE) {
+        findHandle = FindFirstFile(absSearchPattern, &fileProperties);
+        if (findHandle == INVALID_HANDLE_VALUE) {
             writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), absSearchPattern);
         }
         else {
             while (moreDirectoryEntries) {
                 childBasename = fileProperties.cFileName;
                 if (_tcscmp(childBasename, _T(".")) != 0 && _tcscmp(childBasename, _T("..")) != 0) {
-                    if ((absChildPath = buildPath(directoryName, childBasename)) != NULL) {
+                    if ((absChildPath = buildPath(absDirectoryPath, childBasename)) != NULL) {
                         size += getSize(absChildPath, origPathPtr, false);  /* RECURSION */
                         free(absChildPath);
                     }
@@ -282,6 +299,7 @@ unsigned long getSizeOfDirectory(const TCHAR *absDirectoryPath, const TCHAR *ori
         }
         free(absSearchPattern);
     }
+    TRACE_RETURN_ULONG(_T("getSizeOfDirectory"), size);
     return size;
 }
 
@@ -292,6 +310,8 @@ unsigned long getSizeOfRegularFile(const TCHAR *absolutePath, const TCHAR *origP
     unsigned long size = 0;
     unsigned long multiplier;
     unsigned long maxDWORD;
+
+    TRACE_ENTER2(_T("getSizeOfRegularFile"), _T("absolutePath"), absolutePath, _T("origPathPtr"), origPathPtr);
 
     findHandle = FindFirstFile(absolutePath, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
@@ -306,6 +326,7 @@ unsigned long getSizeOfRegularFile(const TCHAR *absolutePath, const TCHAR *origP
             printFileSize(absolutePath, origPathPtr, size);
         }
     }
+    TRACE_RETURN_ULONG(_T("getSizeOfRegularFile"), size);
     return size;
 }
 
@@ -313,6 +334,8 @@ unsigned long getSize(const TCHAR *absolutePath, const TCHAR *origPathPtr, bool 
 {
     DWORD fileAttributes;
     unsigned long size = 0;
+
+    TRACE_ENTER2(_T("getSize"), _T("absolutePath"), absolutePath, _T("origPathPtr"), origPathPtr);
 
     fileAttributes = GetFileAttributes(absolutePath);
     if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
@@ -324,6 +347,7 @@ unsigned long getSize(const TCHAR *absolutePath, const TCHAR *origPathPtr, bool 
     else {
         size = getSizeOfRegularFile(absolutePath, origPathPtr, isTopLevel);
     }
+    TRACE_RETURN_ULONG(_T("getSizeOfRegularFile"), size);
     return size;
 }
 
@@ -348,43 +372,64 @@ TCHAR *buildPath(const TCHAR *left, const TCHAR *right)
 }
 
 /* Result must be freed. */
-TCHAR *getAbsolutePath(const TCHAR *path, const TCHAR **origPathPtr)
+TCHAR *getCurrentDirectory()
+{
+    DWORD bufferLength;
+    LPTSTR buffer;
+    DWORD requiredBufferSize;
+    DWORD result;
+
+    requiredBufferSize = GetCurrentDirectory(0, NULL);
+    buffer = (TCHAR *) malloc(requiredBufferSize * sizeof(TCHAR));
+    result = GetCurrentDirectory(requiredBufferSize, buffer);
+    return buffer;
+}
+
+/* Result must be freed. */
+TCHAR *getAbsolutePath(const TCHAR *path, TCHAR **origPathPtr)
 {
     TCHAR *absolutePath = NULL;
     TCHAR *prefixedPath;
     DWORD requiredBufferSize;
     DWORD returnedPathLength;
+    TCHAR *cwd;
 
-    prefixedPath = prefixForExtendedLengthPath(path);
+    TRACE_ENTER2(_T("getAbsolutePath"), _T("path"), path, _T("origPathPtr"), origPathPtr);
 
     /* Ask for the size of the buffer needed to hold the absolute path. */
-    requiredBufferSize = GetFullPathName(prefixedPath, 0, NULL, NULL);
+    requiredBufferSize = GetFullPathName(path, 0, NULL, NULL);
     if (requiredBufferSize == 0) {
-        writeLastError(GetLastError(), _T("failed to get buffer size required for file name"), prefixedPath);
+        writeLastError(GetLastError(), _T("failed to get buffer size required for file name"), path);
         exit(EXIT_FAILURE);
     }
     else {
         absolutePath = (TCHAR *) malloc(requiredBufferSize * sizeof(TCHAR));
         if (absolutePath == NULL) {
-            writeError(errno, _T("memory allocation failed for absolute path of"), prefixedPath);
+            writeError(errno, _T("memory allocation failed for absolute path of"), path);
             exit(EXIT_FAILURE);
         }
         else {
-            returnedPathLength = GetFullPathName(prefixedPath, requiredBufferSize, absolutePath, NULL);
+            returnedPathLength = GetFullPathName(path, requiredBufferSize, absolutePath, NULL);
             if (returnedPathLength == 0) {
-                writeLastError(GetLastError(), _T("failed to get full path name for "), prefixedPath);
+                writeLastError(GetLastError(), _T("failed to get full path name for "), path);
             }
             else if (returnedPathLength >= requiredBufferSize) {
-                writeLastError(GetLastError(), _T("buffer was not big enough for "), prefixedPath);
+                writeLastError(GetLastError(), _T("buffer was not big enough for "), path);
                 exit(EXIT_FAILURE);
             }
         }
     }
     if (absolutePath != NULL) {
-        *origPathPtr = strstr(absolutePath, path)
+    	prefixedPath = prefixForExtendedLengthPath(absolutePath);
+        if (_tcscmp(path, _T(".")) == 0 || _tcscmp(path, _T(""))) {
+	    *origPathPtr = _T(".");
+        } else {
+            *origPathPtr = _tcsstr(prefixedPath, path);
+	}
         if (*origPathPtr == NULL) {
-            _ftprintf(stderr, _T("can't find original path %s in absolute path %s\n"), path, absolutePath);
+            _ftprintf(stderr, _T("can't find original path %s in absolute path %s\n"), path, prefixedPath);
         }
     }
-    return absolutePath;
+    TRACE_RETURN(_T("getAbsolutePath"), prefixedPath);
+    return prefixedPath;
 }
