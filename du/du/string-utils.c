@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdlib.h>
 #include "du.h"
 #include "string-utils.h"
@@ -86,22 +87,3 @@ _TCHAR *replaceAll(_TCHAR *s, _TCHAR searchFor, _TCHAR replaceWith)
 	return s;
 }
 
-/**
- * Returns a newly allocated string that must be free'd.
- */
-_TCHAR *dirname(const _TCHAR *path)
-{
-	_TCHAR *duplicatePath;
-	_TCHAR *lastBackslash;
-
-	duplicatePath = _tcsdup(path);
-	replaceAll(duplicatePath, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
-	lastBackslash = _tcsrchr(duplicatePath, '\\');		/* Find the last backslash. */
-	if (lastBackslash != NULL) {
-		*lastBackslash = '\0';							/* Terminate the string at the last backslash. */
-	}
-	else {
-		*duplicatePath = '\0';							/* Make it an empty string. */
-	}
-	return duplicatePath;
-}

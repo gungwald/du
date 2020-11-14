@@ -18,10 +18,10 @@ void displayErrorText(DWORD errorCode)
 
     /* If errorCode is in the network range, load the message source */
     if (errorCode >= NERR_BASE && errorCode <= MAX_NERR) {
-        moduleHandle = LoadLibraryEx(_TEXT("netmsg.dll"), NULL, LOAD_LIBRARY_AS_DATAFILE);
+        moduleHandle = LoadLibraryEx(_T("netmsg.dll"), NULL, LOAD_LIBRARY_AS_DATAFILE);
         if (moduleHandle == NULL) {
             /* Can't call writeLastError because that could cause an infinite recursive failure loop. */
-            _ftprintf(stderr, _TEXT("failed to load library netmsg.dll: error number %d\n"), GetLastError());
+            _ftprintf(stderr, _T("failed to load library netmsg.dll: error number %lu\n"), GetLastError());
         }
     }
 
