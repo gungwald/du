@@ -313,7 +313,6 @@ unsigned long getSize(Path *path, bool isTopLevel) {
 	fileAttributes = GetFileAttributes(path->absolute);
 	if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
 		writeLastError(GetLastError(), _T("failed to get attributes for file"), path->absolute);
-		exit(EXIT_FAILURE);
 	}
 	else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		size = getSizeOfDirectory(path, isTopLevel); /* RECURSION */

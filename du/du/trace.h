@@ -8,7 +8,7 @@
 #ifndef TRACE_H_
 #define TRACE_H_
 
-#define TRACE
+//#define TRACE
 #ifdef TRACE
 #define TRACE_ENTER(f,n,v)					_tprintf(_T("Enter %s %s=%s\n"),f,n,v)
 #define TRACE_ENTER2(f,n,v,n2,v2)			_tprintf(_T("Enter %s %s=%s %s=%s\n"),f,n,v,n2,v2)
