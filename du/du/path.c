@@ -63,7 +63,10 @@ Path *buildPath(Path *leftPath, const TCHAR *rightPath)
 	standardizedRightPath = standardizePath(_tcsdup(rightPath));
 	originalLength = _tcslen(leftPath->original);
 	absoluteLength = _tcslen(leftPath->absolute);
-	if (leftPath->original[originalLength - 1] == _T('\\')) {
+        if (originalLength == 0) {
+            result->original = _tcsdup(standardizedRightPath);
+        }
+        else if (leftPath->original[originalLength - 1] == _T('\\')) {
 		result->original = concat(leftPath->original, standardizedRightPath);
 	}
 	else {
@@ -150,7 +153,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 
 void dumpPath(Path *path)
 {
-	_tprintf(_T("Path = { original=%s absolute=%s }\n"), path->original, path->absolute);
+	_tprintf(_T("{ original=%s absolute=%s }\n"), path->original, path->absolute);
 }
 
 /**
@@ -185,4 +188,19 @@ TCHAR *dirnameOfString(TCHAR *path)
 TCHAR *basename(Path *path)
 {
 	return _tcsdup(_tcsrchr(path->absolute, _T('\\')) + 1);
+}
+
+TCHAR *skipPrefix(TCHAR *path)
+{
+    size_t prefixLength;
+    TCHAR *result;
+
+    result = path;
+    prefixLength = _tcslen(EXTENDED_LENGTH_PATH_PREFIX);
+    if (prefixLength > 0) {
+        if (_tcsncmp(path, EXTENDED_LENGTH_PATH_PREFIX, prefixLength) == 0) {
+            result = path + prefixLength;
+        }
+    }
+    return result;
 }

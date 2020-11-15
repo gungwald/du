@@ -203,7 +203,7 @@ void getSizesOfMatchingFiles(Path *path, bool isTopLevel) {
 
 	findHandle = FindFirstFile(path->absolute, &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), path->absolute);
+		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), skipPrefix(path->absolute));
 	}
 	else {
 		searchDirectory = dirname(path);
@@ -221,7 +221,7 @@ void getSizesOfMatchingFiles(Path *path, bool isTopLevel) {
 					moreMatchesForThisArgument = false;
 				}
 				else {
-					writeLastError(lastError, _T("failed to get next file matching pattern"), path->absolute);
+					writeLastError(lastError, _T("failed to get next file matching pattern"), skipPrefix(path->absolute));
 				}
 			}
 		}
@@ -247,7 +247,7 @@ unsigned long getSizeOfDirectory(Path *path, bool isTopLevel) {
 	if (searchPattern != NULL) {
 		findHandle = FindFirstFile(searchPattern->absolute, &fileProperties);
 		if (findHandle == INVALID_HANDLE_VALUE) {
-			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), searchPattern->absolute);
+			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), skipPrefix(searchPattern->absolute));
 		}
 		else {
 			while (moreDirectoryEntries) {
@@ -263,7 +263,7 @@ unsigned long getSizeOfDirectory(Path *path, bool isTopLevel) {
 						moreDirectoryEntries = false;
 					}
 					else {
-						writeLastError(lastError, _T("failed to get next file search results"), searchPattern->absolute);
+						writeLastError(lastError, _T("failed to get next file search results"), skipPrefix(searchPattern->absolute));
 					}
 				}
 			}
@@ -289,7 +289,7 @@ unsigned long getSizeOfRegularFile(Path *path, bool isTopLevel) {
 
 	findHandle = FindFirstFile(path->absolute, &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for file"), path->absolute);
+		writeLastError(GetLastError(), _T("failed to get handle for file"), skipPrefix(path->absolute));
 	}
 	else {
 		maxDWORD = (unsigned long) MAXDWORD; /* Avoid Visual C++ 4.0 warning */
@@ -312,7 +312,7 @@ unsigned long getSize(Path *path, bool isTopLevel) {
 
 	fileAttributes = GetFileAttributes(path->absolute);
 	if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-		writeLastError(GetLastError(), _T("failed to get attributes for file"), path->absolute);
+		writeLastError(GetLastError(), _T("failed to get attributes for file"), skipPrefix(path->absolute));
 	}
 	else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		size = getSizeOfDirectory(path, isTopLevel); /* RECURSION */

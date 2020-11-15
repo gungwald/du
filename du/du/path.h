@@ -30,5 +30,6 @@ extern TCHAR *getOriginalPath(Path *path);
 extern void  dumpPath(Path *path);
 extern Path  *dirname(const Path *path);
 extern TCHAR *basename(Path *path);
+extern TCHAR *skipPrefix(TCHAR *path);
 
 #endif /* PATH_H_ */

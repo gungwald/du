@@ -6,3 +6,4 @@ set PATH=%PATH%;%BIN_DIR%
 reg query hkcu\Environment /v PATH
 if ERRORLEVEL 1 (
     REG ADD hkcu\Environment /v Path /t REG_SZ /d %BIN_DIR%
+) else (
