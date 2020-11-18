@@ -95,7 +95,7 @@ TCHAR *getOriginalPath(Path *path)
 /* Result must be freed. */
 TCHAR *buildAbsolutePath(const TCHAR *path) {
 	TCHAR *absolutePath = NULL;
-	TCHAR *prefixedPath;
+	TCHAR *prefixedPath = NULL;
 	DWORD requiredBufferSize;
 	DWORD returnedPathLength;
 

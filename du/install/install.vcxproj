@@ -1,25 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|ARM">
-      <Configuration>Debug</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|ARM64">
-      <Configuration>Debug</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|ARM">
-      <Configuration>Release</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|ARM64">
-      <Configuration>Release</Configuration>
-      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -37,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{5767c101-1be7-4d5c-90df-8b658918c11f}</ProjectGuid>
-    <RootNamespace>du</RootNamespace>
+    <ProjectGuid>{49be41d4-8e0e-4a3d-afc7-4f7b7a3aabb9}</ProjectGuid>
+    <RootNamespace>install</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -68,18 +52,6 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -100,31 +72,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -138,27 +94,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -176,27 +111,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -210,27 +124,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -248,111 +141,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
-    <ClCompile>
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <ResourceCompile />
-    <ResourceCompile />
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <RootFolder>
-      </RootFolder>
-      <Message>
-      </Message>
-      <Outputs>%(Outputs)</Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>increment-build-number.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Increment build number</Message>
-    </PreBuildEvent>
-    <ClCompile>
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <ClCompile>
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <ClCompile>
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="du.c" />
-    <ClCompile Include="error-handling.c" />
-    <ClCompile Include="path.c" />
-    <ClCompile Include="string-utils.c" />
+    <ClCompile Include="..\du\error-handling.c" />
+    <ClCompile Include="..\du\path.c" />
+    <ClCompile Include="..\du\string-utils.c" />
+    <ClCompile Include="install.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="build-number.h" />
-    <ClInclude Include="du.h" />
-    <ClInclude Include="error-handling.h" />
-    <ClInclude Include="path.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="string-utils.h" />
-    <ClInclude Include="version.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="version.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="create-release-zip-files.bat" />
-    <None Include="increment-build-number.bat" />
+    <ClInclude Include="..\du\error-handling.h" />
+    <ClInclude Include="..\du\path.h" />
+    <ClInclude Include="..\du\string-utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

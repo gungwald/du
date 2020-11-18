@@ -15,53 +15,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="du.c">
+    <ClCompile Include="..\du\error-handling.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="string-utils.c">
+    <ClCompile Include="..\du\path.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="error-handling.c">
+    <ClCompile Include="..\du\string-utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="path.c">
+    <ClCompile Include="install.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="..\du\error-handling.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="version.h">
+    <ClInclude Include="..\du\path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="build-number.h">
+    <ClInclude Include="..\du\string-utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="string-utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="error-handling.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="du.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="path.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="version.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="increment-build-number.bat">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="create-release-zip-files.bat">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
