@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <lmerr.h>
+#include <conio.h>
 #include "../du/error-handling.h"
 #include "../du/string-utils.h"
 #include "../du/path.h"
@@ -17,6 +18,7 @@
 
 static TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value);
 static bool fileExists(TCHAR *path);
+static void exitHandler();
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[])
@@ -32,6 +34,7 @@ int _tmain(int argc, TCHAR *argv[])
     DWORD sizeInBytes;
 
     programName = argv[0];
+    atexit(exitHandler);
 
     if (GetEnvironmentVariable(_T("USERPROFILE"), userProfile, STRING_CAPACITY) == 0) {
         writeLastError(GetLastError(), _T("Failed to get value of environment variable"), _T("USERPROFILE"));
@@ -69,7 +72,12 @@ int _tmain(int argc, TCHAR *argv[])
     if (_tcsstr(path, skipPrefix(installDir->absolute)) == NULL) {
         /* Our installDir is not in the Path yet. */
         _tprintf(_T("Appending %s to user Path in registry\n"), skipPrefix(installDir->absolute));
-        updatedPath = concat3(path, _T(";"), skipPrefix(installDir->absolute));
+        if (path[_tcslen(path) - 1] == ';') {
+            updatedPath = concat(path, skipPrefix(installDir->absolute));
+        }
+        else {
+            updatedPath = concat3(path, _T(";"), skipPrefix(installDir->absolute));
+        }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
         status = RegSetValueEx(environmentKey, PATH_REG_VALUE, 0, REG_EXPAND_SZ, (const BYTE *) updatedPath, sizeInBytes);
         if (status != ERROR_SUCCESS) {
@@ -85,6 +93,12 @@ int _tmain(int argc, TCHAR *argv[])
     freePath(installDir);
     freePath(homeDir);
     return EXIT_SUCCESS;
+}
+
+void exitHandler()
+{
+    _tprintf("Press any key to close this window. ");
+    kbhit();
 }
 
 TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)
