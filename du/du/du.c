@@ -65,6 +65,7 @@ static void getSizesOfMatchingFiles(Path *path, bool isTopLevel);
 bool displayRegularFilesAlso = false;
 bool displayBytes = false;
 bool summarize = false;
+bool humanReadable = false;
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[]) {
@@ -108,15 +109,16 @@ void usage() {
 	_putts(_T("File and directory sizes are written in kilobytes."));
 	_putts(_T("1 kilobyte = 1024 bytes"));
 	_putts(_T(""));
-	_putts(_T("-a          write counts for all files, not just directories"));
-	_putts(_T("-b          print size in bytes"));
-	_putts(_T("-s          display only a total for each argument"));
-	_putts(_T("-?, --help  display this help and exit"));
-	_putts(_T("--version   output version information and exit"));
+	_putts(_T("  /a, -a, --all            write counts for all files, not just directories"));
+	_putts(_T("  /b, -b, --bytes          print size in bytes"));
+	_putts(_T("  /h, -h, --human-readable print sizes in human readable format (e.g., 1K 234M 2G)"));
+	_putts(_T("  /s, -s, --summarize      display only a total for each argument"));
+	_putts(_T("  /?, -?, --help           display this help and exit"));
+	_putts(_T("  /v, --version            output version information and exit"));
 	_putts(_T(""));
 	_putts(_T("Example: du -s *"));
 	_putts(_T(""));
-	_putts(_T("Report bugs https://github.com/gungwald/du"));
+	_putts(_T("Report bugs at https://github.com/gungwald/du"));
 }
 
 void version() {
@@ -142,29 +144,35 @@ int removeElement(int argc, TCHAR *argv[], int elementNumber) {
 }
 
 int setSwitches(int argc, TCHAR *argv[]) {
-	int i = 0;
+	int i = 1;
 	int newArgumentCount = 0;
+	TCHAR *argument;
 
 	newArgumentCount = argc;
-	while (i < newArgumentCount) {
-		if (_tcscmp(argv[i], _T("/?")) == 0 || _tcscmp(argv[i], _T("-?")) == 0 || _tcscmp(argv[i], _T("--help")) == 0) {
+	while (i < argc) {
+		argument = argv[i];
+		if (_tcscmp(argument, _T("/?")) == 0 || _tcscmp(argument, _T("-?")) == 0 || _tcscmp(argument, _T("--help")) == 0) {
 			usage();
-			exit(EXIT_SUCCESS);
+			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing help. */
 		}
-		else if (_tcscmp(argv[i], _T("--version")) == 0) {
+		else if (_tcscmp(argument, _T("/v")) || _tcscmp(argument, _T("--version")) == 0) {
 			version();
-			exit(EXIT_SUCCESS);
+			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing the version. */
 		}
-		else if (_tcscmp(argv[i], _T("/a")) == 0 || _tcscmp(argv[i], _T("-a")) == 0) {
+		else if (_tcscmp(argument, _T("/a")) == 0 || _tcscmp(argument, _T("-a")) == 0 || _tcscmp(argument, _T("--all"))) {
 			displayRegularFilesAlso = true;
 			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
-		else if (_tcscmp(argv[i], _T("/b")) == 0 || _tcscmp(argv[i], _T("-b")) == 0) {
+		else if (_tcscmp(argument, _T("/b")) == 0 || _tcscmp(argument, _T("-b")) == 0 || _tcscmp(argument, _T("--bytes"))) {
 			displayBytes = true;
 			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
-		else if (_tcscmp(argv[i], _T("/s")) == 0 || _tcscmp(argv[i], _T("-s")) == 0) {
+		else if (_tcscmp(argument, _T("/s")) == 0 || _tcscmp(argument, _T("-s")) == 0 || _tcscmp(argument, _T("--summarize"))) {
 			summarize = true;
+			newArgumentCount = removeElement(newArgumentCount, argv, i);
+		}
+		else if (_tcscmp(argument, _T("/h")) == 0 || _tcscmp(argument, _T("-h")) == 0 || _tcscmp(argument, _T("--human-readable"))) {
+			humanReadable = true;
 			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
 		else {
