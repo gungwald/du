@@ -20,6 +20,9 @@
  *
  ***************************************************************************/
 
+/* TODO - Fix argument handling */
+/* TODO - Implement human readable option */
+
 /*
  * NOTES:
  * <ol>
@@ -42,6 +45,7 @@
 #include "string-utils.h"
 #include "error-handling.h"
 #include "trace.h"
+#include "list.h"
 
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
@@ -55,7 +59,7 @@ static void getSizeOfArgument(const TCHAR *argument);
 static void usage();
 static void version();
 static int removeElement(int argc, TCHAR *argv[], int elementNumber);
-static int setSwitches(int argc, TCHAR *argv[]);
+static List *setSwitches(int argc, TCHAR *argv[]);
 static void printFileSize(Path *path, unsigned long size);
 static unsigned long getSize(Path *path, bool isTopLevel);
 static unsigned long getSizeOfDirectory(Path *path, bool isTopLevel);
@@ -69,20 +73,21 @@ bool humanReadable = false;
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[]) {
-	int i;
-	int nonSwitchArgumentCount;
+	List *nonSwitchArguments;
 
 	TRACE_ENTER(_T("wmain"), _T("argv[1]"), argv[1]);
 	programName = argv[0];
-	nonSwitchArgumentCount = setSwitches(argc, argv);
-	if (nonSwitchArgumentCount > 1) {
-		for (i = 1; i < nonSwitchArgumentCount; i++) {
-			getSizeOfArgument(argv[i]);
+	nonSwitchArguments = setSwitches(argc, argv);
+	if (listGetSize(nonSwitchArguments) > 0) {
+		while (listHasMoreElements(nonSwitchArguments)) {
+			getSizeOfArgument(listGetData(nonSwitchArguments));
+			listAdvance(nonSwitchArguments);
 		}
 	}
 	else {
 		getSizeOfArgument(DEFAULT_PATH);
 	}
+	delete_List(nonSwitchArguments);
 	TRACE_RETURN_INT(_T("wmain"), EXIT_SUCCESS);
 	return EXIT_SUCCESS;
 }
@@ -92,14 +97,14 @@ void getSizeOfArgument(const TCHAR *argument)
 	Path *path;
 
 	TRACE_ENTER(_T("getSizeOfArgument"), _T("argument"), argument);
-	path = initPath(argument);
+	path = new_Path(argument);
 	if (isGlob(argument)) { /* Will be true if compiled with Visual C++, but not with GCC. */
 		getSizesOfMatchingFiles(path, true);
 	}
 	else {
 		getSize(path, true);
 	}
-	freePath(path);
+	delete_Path(path);
 	TRACE_RETURN(_T("getSizeOfArgument"), _T("void"));
 }
 
@@ -114,7 +119,7 @@ void usage() {
 	_putts(_T("  /h, -h, --human-readable print sizes in human readable format (e.g., 1K 234M 2G)"));
 	_putts(_T("  /s, -s, --summarize      display only a total for each argument"));
 	_putts(_T("  /?, -?, --help           display this help and exit"));
-	_putts(_T("  /v, --version            output version information and exit"));
+	_putts(_T("  /v, -v, --version        output version information and exit"));
 	_putts(_T(""));
 	_putts(_T("Example: du -s *"));
 	_putts(_T(""));
@@ -143,47 +148,43 @@ int removeElement(int argc, TCHAR *argv[], int elementNumber) {
 	return i;
 }
 
-int setSwitches(int argc, TCHAR *argv[]) {
-	int i = 1;
-	int newArgumentCount = 0;
+List *setSwitches(int argc, TCHAR *argv[]) {
+	int i;
 	TCHAR *argument;
+	List *remainingArguments;
 
-	newArgumentCount = argc;
-	while (i < argc) {
+	remainingArguments = new_List();
+	for (i = 1; i < argc; i++) {
 		argument = argv[i];
 		if (_tcscmp(argument, _T("/?")) == 0 || _tcscmp(argument, _T("-?")) == 0 || _tcscmp(argument, _T("--help")) == 0) {
 			usage();
 			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing help. */
 		}
-		else if (_tcscmp(argument, _T("/v")) || _tcscmp(argument, _T("--version")) == 0) {
+		else if (_tcscmp(argument, _T("/v")) == 0 || _tcscmp(argument, _T("-v")) == 0 || _tcscmp(argument, _T("--version")) == 0) {
 			version();
 			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing the version. */
 		}
-		else if (_tcscmp(argument, _T("/a")) == 0 || _tcscmp(argument, _T("-a")) == 0 || _tcscmp(argument, _T("--all"))) {
+		else if (_tcscmp(argument, _T("/a")) == 0 || _tcscmp(argument, _T("-a")) == 0 || _tcscmp(argument, _T("--all")) == 0) {
 			displayRegularFilesAlso = true;
-			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
-		else if (_tcscmp(argument, _T("/b")) == 0 || _tcscmp(argument, _T("-b")) == 0 || _tcscmp(argument, _T("--bytes"))) {
+		else if (_tcscmp(argument, _T("/b")) == 0 || _tcscmp(argument, _T("-b")) == 0 || _tcscmp(argument, _T("--bytes")) == 0) {
 			displayBytes = true;
-			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
-		else if (_tcscmp(argument, _T("/s")) == 0 || _tcscmp(argument, _T("-s")) == 0 || _tcscmp(argument, _T("--summarize"))) {
+		else if (_tcscmp(argument, _T("/s")) == 0 || _tcscmp(argument, _T("-s")) == 0 || _tcscmp(argument, _T("--summarize")) == 0) {
 			summarize = true;
-			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
-		else if (_tcscmp(argument, _T("/h")) == 0 || _tcscmp(argument, _T("-h")) == 0 || _tcscmp(argument, _T("--human-readable"))) {
+		else if (_tcscmp(argument, _T("/h")) == 0 || _tcscmp(argument, _T("-h")) == 0 || _tcscmp(argument, _T("--human-readable")) == 0) {
 			humanReadable = true;
-			newArgumentCount = removeElement(newArgumentCount, argv, i);
 		}
 		else {
-			i++;
+			listAdd(remainingArguments, argument);
 		}
 	}
 	if (displayRegularFilesAlso && summarize) {
 		_ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
 		exit(EXIT_FAILURE);
 	}
-	return newArgumentCount;
+	return remainingArguments;
 }
 
 void printFileSize(Path *path, unsigned long size) {
@@ -195,7 +196,7 @@ void printFileSize(Path *path, unsigned long size) {
 			}
 		}
 	}
-	_tprintf(_T("%-7lu %s\n"), size, path->original);
+	_tprintf(_T("%-7lu %s\n"), size, pathGetOriginal(path));
 }
 
 void getSizesOfMatchingFiles(Path *path, bool isTopLevel) {
@@ -207,19 +208,19 @@ void getSizesOfMatchingFiles(Path *path, bool isTopLevel) {
 	Path *searchDirectory;
 	Path *directoryEntry;
 
-	TRACE_ENTER_CALLBACK(_T("displaySizesOfMatchingFiles"), _T("path"), dumpPath, path);
+	TRACE_ENTER_CALLBACK(_T("displaySizesOfMatchingFiles"), _T("path"), pathDump, path);
 
-	findHandle = FindFirstFile(path->absolute, &fileProperties);
+	findHandle = FindFirstFile(pathGetAbsoluteRaw(path), &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), skipPrefix(path->absolute));
+		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), pathGetAbsolute(path));
 	}
 	else {
-		searchDirectory = dirname(path);
+		searchDirectory = pathDirName(path);
 		while (moreMatchesForThisArgument) {
 			entryBasename = fileProperties.cFileName;
 			if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
 
-				directoryEntry = buildPath(searchDirectory, entryBasename);
+				directoryEntry = pathAppend(searchDirectory, entryBasename);
 				getSize(directoryEntry, true);
 				free(directoryEntry);
 			}
@@ -229,7 +230,7 @@ void getSizesOfMatchingFiles(Path *path, bool isTopLevel) {
 					moreMatchesForThisArgument = false;
 				}
 				else {
-					writeLastError(lastError, _T("failed to get next file matching pattern"), skipPrefix(path->absolute));
+					writeLastError(lastError, _T("failed to get next file matching pattern"), pathGetAbsolute(path));
 				}
 			}
 		}
@@ -249,19 +250,19 @@ unsigned long getSizeOfDirectory(Path *path, bool isTopLevel) {
 	DWORD lastError;
 	unsigned long size = 0;
 
-	TRACE_ENTER_CALLBACK(_T("getSizeOfDirectory"), _T("path"), dumpPath, path);
+	TRACE_ENTER_CALLBACK(_T("getSizeOfDirectory"), _T("path"), pathDump, path);
 
-	searchPattern = buildPath(path, _T("*"));
+	searchPattern = pathAppend(path, _T("*"));
 	if (searchPattern != NULL) {
-		findHandle = FindFirstFile(searchPattern->absolute, &fileProperties);
+		findHandle = FindFirstFile(pathGetAbsoluteRaw(searchPattern), &fileProperties);
 		if (findHandle == INVALID_HANDLE_VALUE) {
-			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), skipPrefix(searchPattern->absolute));
+			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), pathGetAbsolute(searchPattern));
 		}
 		else {
 			while (moreDirectoryEntries) {
 				entryBasename = fileProperties.cFileName;
 				if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
-					if ((dirEntry = buildPath(path, entryBasename)) != NULL) {
+					if ((dirEntry = pathAppend(path, entryBasename)) != NULL) {
 						size += getSize(dirEntry, false); /* RECURSION */
 						free(dirEntry);
 					}
@@ -271,7 +272,7 @@ unsigned long getSizeOfDirectory(Path *path, bool isTopLevel) {
 						moreDirectoryEntries = false;
 					}
 					else {
-						writeLastError(lastError, _T("failed to get next file search results"), skipPrefix(searchPattern->absolute));
+						writeLastError(lastError, _T("failed to get next file search results"), pathGetAbsolute(searchPattern));
 					}
 				}
 			}
@@ -293,11 +294,11 @@ unsigned long getSizeOfRegularFile(Path *path, bool isTopLevel) {
 	unsigned long multiplier;
 	unsigned long maxDWORD;
 
-	TRACE_ENTER_CALLBACK(_T("getSizeOfRegularFile"), _T("path"), dumpPath, path);
+	TRACE_ENTER_CALLBACK(_T("getSizeOfRegularFile"), _T("path"), pathDump, path);
 
-	findHandle = FindFirstFile(path->absolute, &fileProperties);
+	findHandle = FindFirstFile(pathGetAbsoluteRaw(path), &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for file"), skipPrefix(path->absolute));
+		writeLastError(GetLastError(), _T("failed to get handle for file"), pathGetAbsolute(path));
 	}
 	else {
 		maxDWORD = (unsigned long) MAXDWORD; /* Avoid Visual C++ 4.0 warning */
@@ -316,11 +317,11 @@ unsigned long getSize(Path *path, bool isTopLevel) {
 	DWORD fileAttributes;
 	unsigned long size = 0;
 
-	TRACE_ENTER_CALLBACK(_T("getSize"), _T("path"), dumpPath, path);
+	TRACE_ENTER_CALLBACK(_T("getSize"), _T("path"), pathDump, path);
 
-	fileAttributes = GetFileAttributes(path->absolute);
+	fileAttributes = GetFileAttributes(pathGetAbsoluteRaw(path));
 	if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-		writeLastError(GetLastError(), _T("failed to get attributes for file"), skipPrefix(path->absolute));
+		writeLastError(GetLastError(), _T("failed to get attributes for file"), pathGetAbsolute(path));
 	}
 	else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		size = getSizeOfDirectory(path, isTopLevel); /* RECURSION */

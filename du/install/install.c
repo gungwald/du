@@ -18,7 +18,7 @@
 
 static TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value);
 static bool fileExists(TCHAR *path);
-static void exitHandler();
+static void exitHandler(void);
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[])
@@ -41,22 +41,22 @@ int _tmain(int argc, TCHAR *argv[])
         exit(EXIT_FAILURE);
     }
 
-    homeDir = initPath(userProfile);
-    installDir = buildPath(homeDir, _T("bin"));
-    installTargetFile = buildPath(installDir, FILE_TO_INSTALL);
+    homeDir = new_Path(userProfile);
+    installDir = pathAppend(homeDir, _T("bin"));
+    installTargetFile = pathAppend(installDir, FILE_TO_INSTALL);
 
     if (!fileExists(installDir->absolute)) {
-        _tprintf(_T("Creating directory %s\n"), skipPrefix(installDir->absolute));
+        _tprintf(_T("Creating directory %s\n"), pathGetAbsolute(installDir));
         if (!CreateDirectory(installDir->absolute, NULL)) {
             writeLastError(GetLastError(), _T("Failed to create install directory"), installDir->absolute);
             exit(EXIT_FAILURE);
         }
     }
     else {
-        _tprintf(_T("Directory %s already exists\n"), skipPrefix(installDir->absolute));
+        _tprintf(_T("Directory %s already exists\n"), pathGetAbsolute(installDir));
     }
 
-    _tprintf(_T("Copying %s to %s\n"), FILE_TO_INSTALL, skipPrefix(installDir->absolute));
+    _tprintf(_T("Copying %s to %s\n"), FILE_TO_INSTALL, pathGetAbsolute(installDir));
     if (!CopyFile(FILE_TO_INSTALL, installTargetFile->absolute, FALSE)) {
 		writeLastError(GetLastError(), _T("Failed to copy file"), installTargetFile->absolute);
 		exit(EXIT_FAILURE);
@@ -69,14 +69,14 @@ int _tmain(int argc, TCHAR *argv[])
     }
 
 	path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
-    if (_tcsstr(path, skipPrefix(installDir->absolute)) == NULL) {
+    if (_tcsstr(path, pathGetAbsolute(installDir)) == NULL) {
         /* Our installDir is not in the Path yet. */
-        _tprintf(_T("Appending %s to user Path in registry\n"), skipPrefix(installDir->absolute));
+        _tprintf(_T("Appending %s to user Path in registry\n"), pathGetAbsolute(installDir));
         if (path[_tcslen(path) - 1] == ';') {
-            updatedPath = concat(path, skipPrefix(installDir->absolute));
+            updatedPath = concat(path, pathGetAbsolute(installDir));
         }
         else {
-            updatedPath = concat3(path, _T(";"), skipPrefix(installDir->absolute));
+            updatedPath = concat3(path, _T(";"), pathGetAbsolute(installDir));
         }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
         status = RegSetValueEx(environmentKey, PATH_REG_VALUE, 0, REG_EXPAND_SZ, (const BYTE *) updatedPath, sizeInBytes);
@@ -86,19 +86,19 @@ int _tmain(int argc, TCHAR *argv[])
         free(updatedPath);
 	}
     else {
-        _tprintf(_T("Directory %s already exists in user Path in registry\n"), skipPrefix(installDir->absolute));
+        _tprintf(_T("Directory %s already exists in user Path in registry\n"), pathGetAbsolute(installDir));
     }
 	free(path);
-    freePath(installTargetFile);
-    freePath(installDir);
-    freePath(homeDir);
+    delete_Path(installTargetFile);
+    delete_Path(installDir);
+    delete_Path(homeDir);
     return EXIT_SUCCESS;
 }
 
-void exitHandler()
+void exitHandler(void)
 {
-    _tprintf("Press any key to close this window. ");
-    kbhit();
+    _tprintf(_T("Press any key to close this window. "));
+    _kbhit();
 }
 
 TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)

@@ -18,12 +18,12 @@
 #endif
 
 static TCHAR *prefixForExtendedLengthPath(const TCHAR *path);
-static TCHAR *buildAbsolutePath(const TCHAR *path);
+static TCHAR *queryForAbsolutePath(const TCHAR *path);
 static Path  *allocatePath();
 static TCHAR *standardizePath(TCHAR *path);
-static TCHAR *dirnameOfString(TCHAR *path);
+static TCHAR *skipPrefix(TCHAR *path);
 
-Path *initPath(const TCHAR *name)
+Path *new_Path(const TCHAR *name)
 {
 	Path *path;
 
@@ -34,7 +34,7 @@ Path *initPath(const TCHAR *name)
 	}
 	else {
 		path->original = standardizePath(_tcsdup(name));
-		path->absolute = buildAbsolutePath(path->original);
+		path->absolute = queryForAbsolutePath(path->original);
 	}
 	return path;
 }
@@ -44,7 +44,7 @@ TCHAR *standardizePath(TCHAR *path)
 	return replaceAll(path, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }
 
-void freePath(Path *path)
+void delete_Path(Path *path)
 {
 	free(path->absolute);
 	free(path->original);
@@ -52,7 +52,7 @@ void freePath(Path *path)
 }
 
 /* Result must be freed. */
-Path *buildPath(Path *leftPath, const TCHAR *rightPath)
+Path *pathAppend(Path *leftPath, const TCHAR *rightPath)
 {
 	Path *result;
 	TCHAR *standardizedRightPath;
@@ -82,24 +82,34 @@ Path *buildPath(Path *leftPath, const TCHAR *rightPath)
 	return result;
 }
 
-TCHAR *getAbsolutePath(Path *path)
+TCHAR *pathGetAbsolute(Path *path)
+{
+	return skipPrefix(path->absolute);
+}
+
+TCHAR *pathGetOriginal(Path *path)
+{
+	return skipPrefix(path->original);
+}
+
+TCHAR *pathGetAbsoluteRaw(Path *path)
 {
 	return path->absolute;
 }
 
-TCHAR *getOriginalPath(Path *path)
+TCHAR *pathGetOriginalRaw(Path *path)
 {
 	return path->original;
 }
 
 /* Result must be freed. */
-TCHAR *buildAbsolutePath(const TCHAR *path) {
+TCHAR *queryForAbsolutePath(const TCHAR *path) {
 	TCHAR *absolutePath = NULL;
 	TCHAR *prefixedPath = NULL;
 	DWORD requiredBufferSize;
 	DWORD returnedPathLength;
 
-	TRACE_ENTER(_T("buildAbsolutePath"), _T("path"), path);
+	TRACE_ENTER(_T("queryForAbsolutePath"), _T("path"), path);
 
 	/* Ask for the size of the buffer needed to hold the absolute path. */
 	requiredBufferSize = GetFullPathName(path, 0, NULL, NULL);
@@ -128,7 +138,7 @@ TCHAR *buildAbsolutePath(const TCHAR *path) {
 		prefixedPath = prefixForExtendedLengthPath(absolutePath);
 		free(absolutePath);
 	}
-	TRACE_RETURN(_T("buildAbsolutePath"), prefixedPath);
+	TRACE_RETURN(_T("queryForAbsolutePath"), prefixedPath);
 	return prefixedPath;
 }
 
@@ -151,7 +161,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 	return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-void dumpPath(Path *path)
+void pathDump(Path *path)
 {
 	_tprintf(_T("{ original=%s absolute=%s }\n"), path->original, path->absolute);
 }
@@ -159,17 +169,17 @@ void dumpPath(Path *path)
 /**
  * Returns a newly allocated string that must be free'd.
  */
-Path *dirname(const Path *path)
+Path *pathDirName(const Path *path)
 {
 	Path *dir;
 
 	dir = allocatePath();
-	dir->original = dirnameOfString(path->original);
-	dir->absolute = dirnameOfString(path->absolute);
+	dir->original = dirname(path->original);
+	dir->absolute = dirname(path->absolute);
 	return dir;
 }
 
-TCHAR *dirnameOfString(TCHAR *path)
+TCHAR *dirname(TCHAR *path)
 {
 	TCHAR *dir;
 	TCHAR *lastBackslashPointer;
@@ -185,7 +195,7 @@ TCHAR *dirnameOfString(TCHAR *path)
 	return dir;
 }
 
-TCHAR *basename(Path *path)
+TCHAR *pathBaseName(Path *path)
 {
 	return _tcsdup(_tcsrchr(path->absolute, _T('\\')) + 1);
 }

@@ -335,6 +335,7 @@
   <ItemGroup>
     <ClCompile Include="du.c" />
     <ClCompile Include="error-handling.c" />
+    <ClCompile Include="list.c" />
     <ClCompile Include="path.c" />
     <ClCompile Include="string-utils.c" />
   </ItemGroup>
@@ -342,6 +343,7 @@
     <ClInclude Include="build-number.h" />
     <ClInclude Include="du.h" />
     <ClInclude Include="error-handling.h" />
+    <ClInclude Include="list.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="string-utils.h" />
