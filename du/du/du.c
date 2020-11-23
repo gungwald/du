@@ -81,16 +81,16 @@ int _tmain(int argc, TCHAR *argv[]) {
 	TRACE_ENTER(__func__, _T("argv[1]"), argv[1]);
 	programName = argv[0];
 	nonSwitchArguments = setSwitches(argc, argv);
-	if (list_GetSize(nonSwitchArguments) > 0) {
-		while (list_HasMoreElements(nonSwitchArguments)) {
-			calcDiskUsageOfArgument(list_GetData(nonSwitchArguments));
-			list_Advance(nonSwitchArguments);
+	if (list_getSize(nonSwitchArguments) > 0) {
+		while (list_hasMoreElements(nonSwitchArguments)) {
+			calcDiskUsageOfArgument(list_getData(nonSwitchArguments));
+			list_advance(nonSwitchArguments);
 		}
 	}
 	else {
 		calcDiskUsageOfArgument(DEFAULT_PATH);
 	}
-	list_Delete(nonSwitchArguments);
+	list_free(nonSwitchArguments);
 	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
 	return EXIT_SUCCESS;
 }
@@ -101,14 +101,14 @@ unsigned long calcDiskUsageOfArgument(const TCHAR *argument)
 	size_t diskUsage;
 
 	TRACE_ENTER(__func__, _T("argument"), argument);
-	path = path_Init(argument);
+	path = path_init(argument);
 	if (isGlob(argument)) { /* Will be true if compiled with Visual C++, but not with GCC. */
 		diskUsage = calcDiskUsageOfFilesMatchingPattern(path, true);
 	}
 	else {
 		diskUsage = calcDiskUsageOfFile(path, true);
 	}
-	path_Delete(path);
+	path_free(path);
 	TRACE_RETURN_ULONG(__func__, diskUsage);
 	return diskUsage;
 }
@@ -149,7 +149,7 @@ List *setSwitches(int argc, TCHAR *argv[]) {
 	TCHAR *argument;
 	List *remainingArguments;
 
-	remainingArguments = list_Init();
+	remainingArguments = list_init();
 	for (i = 1; i < argc; i++) {
 		argument = argv[i];
 		if (_tcscmp(argument, _T("/?")) == 0 || _tcscmp(argument, _T("-?")) == 0 || _tcscmp(argument, _T("--help")) == 0) {
@@ -173,7 +173,7 @@ List *setSwitches(int argc, TCHAR *argv[]) {
 			humanReadable = true;
 		}
 		else {
-			list_Append(remainingArguments, argument);
+			list_append(remainingArguments, argument);
 		}
 	}
 	if (displayRegularFilesAlso && summarize) {
@@ -188,18 +188,18 @@ void printFileSize(Path *path, unsigned long size) {
 	if (humanReadable) {
 		if (size >= GIBIBYTE) {
 			hrSize = ((double) size) / ((double) GIBIBYTE);
-			_tprintf(_T("%.1fG    %s\n"), hrSize, path_GetOriginal(path));
+			_tprintf(_T("%.1fG    %s\n"), hrSize, path_getOriginal(path));
 		}
 		else if (size >= MEBIBYTE) {
 			hrSize = ((double) size) / ((double) MEBIBYTE);
-			_tprintf(_T("%.1fM    %s\n"), hrSize, path_GetOriginal(path));
+			_tprintf(_T("%.1fM    %s\n"), hrSize, path_getOriginal(path));
 		}
 		else if (size >= KIBIBYTE) {
 			hrSize = ((double) size) / ((double) KIBIBYTE);
-			_tprintf(_T("%.1fK    %s\n"), hrSize, path_GetOriginal(path));
+			_tprintf(_T("%.1fK    %s\n"), hrSize, path_getOriginal(path));
 		}
 		else {
-			_tprintf(_T("%-7lu %s\n"), size, path_GetOriginal(path));
+			_tprintf(_T("%-7lu %s\n"), size, path_getOriginal(path));
 		}
 	}
 	else {
@@ -211,7 +211,7 @@ void printFileSize(Path *path, unsigned long size) {
 				}
 			}
 		}
-		_tprintf(_T("%-7lu %s\n"), size, path_GetOriginal(path));
+		_tprintf(_T("%-7lu %s\n"), size, path_getOriginal(path));
 	}
 }
 
@@ -225,20 +225,20 @@ unsigned long calcDiskUsageOfFilesMatchingPattern(Path *path, bool isTopLevel) {
 	Path *directoryEntry;
 	unsigned long totalSize = 0;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_Dump, path);
+	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_dump, path);
 
-	findHandle = FindFirstFile(path_GetAbsoluteRaw(path), &fileProperties);
+	findHandle = FindFirstFile(path_getAbsoluteRaw(path), &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), path_GetAbsolute(path));
+		writeLastError(GetLastError(), _T("failed to get handle for search pattern"), path_getAbsolute(path));
 	}
 	else {
-		searchDirectory = path_GetParentDirectory(path);
+		searchDirectory = path_getParentDirectory(path);
 		while (moreMatchesForThisArgument) {
 			entryBasename = fileProperties.cFileName;
 			if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
-				directoryEntry = path_Append(searchDirectory, entryBasename);
+				directoryEntry = path_append(searchDirectory, entryBasename);
 				totalSize += calcDiskUsageOfFile(directoryEntry, true);
-				path_Delete(directoryEntry);
+				path_free(directoryEntry);
 			}
 			if (!FindNextFile(findHandle, &fileProperties)) {
 				lastError = GetLastError();
@@ -246,11 +246,11 @@ unsigned long calcDiskUsageOfFilesMatchingPattern(Path *path, bool isTopLevel) {
 					moreMatchesForThisArgument = false;
 				}
 				else {
-					writeLastError(lastError, _T("failed to get next file matching pattern"), path_GetAbsolute(path));
+					writeLastError(lastError, _T("failed to get next file matching pattern"), path_getAbsolute(path));
 				}
 			}
 		}
-		path_Delete(searchDirectory);
+		path_free(searchDirectory);
 		FindClose(findHandle); /* Only close it if it got opened successfully */
 	}
 	TRACE_RETURN_ULONG(__func__, totalSize);
@@ -267,21 +267,21 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 	DWORD lastError;
 	unsigned long size = 0;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_Dump, path);
+	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_dump, path);
 
-	searchPattern = path_Append(path, _T("*"));
+	searchPattern = path_append(path, _T("*"));
 	if (searchPattern != NULL) {
-		findHandle = FindFirstFile(path_GetAbsoluteRaw(searchPattern), &fileProperties);
+		findHandle = FindFirstFile(path_getAbsoluteRaw(searchPattern), &fileProperties);
 		if (findHandle == INVALID_HANDLE_VALUE) {
-			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), path_GetAbsolute(searchPattern));
+			writeLastError(GetLastError(), _T("failed to get handle for file search pattern"), path_getAbsolute(searchPattern));
 		}
 		else {
 			while (moreDirectoryEntries) {
 				entryBasename = fileProperties.cFileName;
 				if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
-					if ((dirEntry = path_Append(path, entryBasename)) != NULL) {
+					if ((dirEntry = path_append(path, entryBasename)) != NULL) {
 						size += calcDiskUsageOfFile(dirEntry, false); /* RECURSION */
-						path_Delete(dirEntry);
+						path_free(dirEntry);
 					}
 				}
 				if (!FindNextFile(findHandle, &fileProperties)) {
@@ -289,7 +289,7 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 						moreDirectoryEntries = false;
 					}
 					else {
-						writeLastError(lastError, _T("failed to get next file search results"), path_GetAbsolute(searchPattern));
+						writeLastError(lastError, _T("failed to get next file search results"), path_getAbsolute(searchPattern));
 					}
 				}
 			}
@@ -298,7 +298,7 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 				printFileSize(path, size);
 			}
 		}
-		path_Delete(searchPattern);
+		path_free(searchPattern);
 	}
 	TRACE_RETURN_ULONG(__func__, size);
 	return size;
@@ -311,11 +311,11 @@ unsigned long calcDiskUsageOfRegularFile(Path *path, bool isTopLevel) {
 	unsigned long multiplier;
 	unsigned long maxDWORD;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_Dump, path);
+	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_dump, path);
 
-	findHandle = FindFirstFile(path_GetAbsoluteRaw(path), &fileProperties);
+	findHandle = FindFirstFile(path_getAbsoluteRaw(path), &fileProperties);
 	if (findHandle == INVALID_HANDLE_VALUE) {
-		writeLastError(GetLastError(), _T("failed to get handle for file"), path_GetAbsolute(path));
+		writeLastError(GetLastError(), _T("failed to get handle for file"), path_getAbsolute(path));
 	}
 	else {
 		maxDWORD = (unsigned long) MAXDWORD; /* Avoid Visual C++ 4.0 warning */
@@ -334,11 +334,11 @@ unsigned long calcDiskUsageOfFile(Path *path, bool isTopLevel) {
 	DWORD fileAttributes;
 	unsigned long size = 0;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_Dump, path);
+	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_dump, path);
 
-	fileAttributes = GetFileAttributes(path_GetAbsoluteRaw(path));
+	fileAttributes = GetFileAttributes(path_getAbsoluteRaw(path));
 	if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-		writeLastError(GetLastError(), _T("failed to get attributes for file"), path_GetAbsolute(path));
+		writeLastError(GetLastError(), _T("failed to get attributes for file"), path_getAbsolute(path));
 	}
 	else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		size = calcDiskUsageOfDirectory(path, isTopLevel); /* RECURSION */

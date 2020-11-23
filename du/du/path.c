@@ -23,7 +23,7 @@ static Path  *allocatePath();
 static TCHAR *standardizePath(TCHAR *path);
 static TCHAR *skipPrefix(TCHAR *path);
 
-Path *path_Init(const TCHAR *name)
+Path *path_init(const TCHAR *name)
 {
 	Path *path;
 
@@ -44,7 +44,7 @@ TCHAR *standardizePath(TCHAR *path)
 	return replaceAll(path, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }
 
-void path_Delete(Path *path)
+void path_free(Path *path)
 {
 	free(path->absolute);
 	free(path->original);
@@ -52,7 +52,7 @@ void path_Delete(Path *path)
 }
 
 /* Returns new Path object which must be deleted. */
-Path *path_Append(Path *leftPath, const TCHAR *rightPath)
+Path *path_append(Path *leftPath, const TCHAR *rightPath)
 {
 	Path *result;
 	TCHAR *standardizedRightPath;
@@ -82,22 +82,22 @@ Path *path_Append(Path *leftPath, const TCHAR *rightPath)
 	return result;
 }
 
-TCHAR *path_GetAbsolute(Path *path)
+TCHAR *path_getAbsolute(Path *path)
 {
 	return skipPrefix(path->absolute);
 }
 
-TCHAR *path_GetOriginal(Path *path)
+TCHAR *path_getOriginal(Path *path)
 {
 	return skipPrefix(path->original);
 }
 
-TCHAR *path_GetAbsoluteRaw(Path *path)
+TCHAR *path_getAbsoluteRaw(Path *path)
 {
 	return path->absolute;
 }
 
-TCHAR *path_GetOriginalRaw(Path *path)
+TCHAR *path_getOriginalRaw(Path *path)
 {
 	return path->original;
 }
@@ -161,7 +161,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 	return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-void path_Dump(Path *path)
+void path_dump(Path *path)
 {
 	_tprintf(_T("{ original=%s absolute=%s }\n"), path->original, path->absolute);
 }
@@ -169,7 +169,7 @@ void path_Dump(Path *path)
 /**
  * Returns a newly allocated string that must be free'd.
  */
-Path *path_GetParentDirectory(const Path *path)
+Path *path_getParentDirectory(const Path *path)
 {
 	Path *dir;
 
@@ -195,7 +195,7 @@ TCHAR *dirname(TCHAR *path)
 	return dir;
 }
 
-TCHAR *path_GetUnqualifiedName(Path *path)
+TCHAR *path_getUnqualifiedName(Path *path)
 {
 	return _tcsdup(_tcsrchr(path->absolute, _T('\\')) + 1);
 }

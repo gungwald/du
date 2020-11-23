@@ -22,16 +22,16 @@ typedef
 	struct PathStruct
 	Path;
 
-extern Path  *path_Init(const TCHAR *path);
-extern void   path_Delete(Path *path);
-extern Path  *path_Append(Path *leftPath, const TCHAR *rightPath);
-extern TCHAR *path_GetAbsolute(Path *path);
-extern TCHAR *path_GetAbsoluteRaw(Path *path);
-extern TCHAR *path_GetOriginal(Path *path);
-extern TCHAR *path_GetOriginalRaw(Path *path);
-extern void   path_Dump(Path *path);
-extern Path  *path_GetParentDirectory(const Path *path);
-extern TCHAR *path_GetUnqualifiedName(Path *path);
+extern Path  *path_init(const TCHAR *path);
+extern void   path_free(Path *path);
+extern Path  *path_append(Path *leftPath, const TCHAR *rightPath);
+extern TCHAR *path_getAbsolute(Path *path);
+extern TCHAR *path_getAbsoluteRaw(Path *path);
+extern TCHAR *path_getOriginal(Path *path);
+extern TCHAR *path_getOriginalRaw(Path *path);
+extern void   path_dump(Path *path);
+extern Path  *path_getParentDirectory(const Path *path);
+extern TCHAR *path_getUnqualifiedName(Path *path);
 extern TCHAR *dirname(TCHAR *path);
 
 #endif /* PATH_H_ */

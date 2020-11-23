@@ -1,11 +1,11 @@
 #include <malloc.h>
 #include "list.h"
 
-List *list_Init()
+List *list_init()
 {
-	struct ListInfo *list;
+	struct ListControlBlock *list;
 
-	list = (struct ListInfo *) malloc(sizeof(struct ListInfo));
+	list = (struct ListControlBlock *) malloc(sizeof(struct ListControlBlock));
 	list->first = NULL;
 	list->current = NULL;
 	list->last = NULL;
@@ -13,12 +13,12 @@ List *list_Init()
 	return list;
 }
 
-void list_Delete(List *list)
+void list_free(List *list)
 {
 
 }
 
-List *list_Append(List *list, TCHAR *data)
+List *list_append(List *list, TCHAR *data)
 {
 	struct ListNode *node;
 
@@ -38,29 +38,29 @@ List *list_Append(List *list, TCHAR *data)
 	return list;
 }
 
-TCHAR *list_GetData(List *list)
+TCHAR *list_getData(List *list)
 {
 	return list->current->data;
 }
 
-void list_Advance(List *list)
+void list_advance(List *list)
 {
 	if (list->current != NULL) {
 		list->current = list->current->next;
 	}
 }
 
-void list_Reset(List *list)
+void list_reset(List *list)
 {
 	list->current = list->first;
 }
 
-size_t list_GetSize(List *list)
+size_t list_getSize(List *list)
 {
 	return list->size;
 }
 
-bool list_HasMoreElements(List *list)
+bool list_hasMoreElements(List *list)
 {
 	return list->current != NULL;
 }
