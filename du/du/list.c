@@ -1,7 +1,7 @@
 #include <malloc.h>
 #include "list.h"
 
-List *new_List()
+List *list_Init()
 {
 	struct ListInfo *list;
 
@@ -13,12 +13,12 @@ List *new_List()
 	return list;
 }
 
-void delete_List(List *list)
+void list_Delete(List *list)
 {
 
 }
 
-List *listAdd(List *list, TCHAR *data)
+List *list_Append(List *list, TCHAR *data)
 {
 	struct ListNode *node;
 
@@ -38,29 +38,29 @@ List *listAdd(List *list, TCHAR *data)
 	return list;
 }
 
-TCHAR *listGetData(List *list)
+TCHAR *list_GetData(List *list)
 {
 	return list->current->data;
 }
 
-void listAdvance(List *list)
+void list_Advance(List *list)
 {
 	if (list->current != NULL) {
 		list->current = list->current->next;
 	}
 }
 
-void listReset(List *list)
+void list_Reset(List *list)
 {
 	list->current = list->first;
 }
 
-size_t listGetSize(List *list)
+size_t list_GetSize(List *list)
 {
 	return list->size;
 }
 
-bool listHasMoreElements(List *list)
+bool list_HasMoreElements(List *list)
 {
 	return list->current != NULL;
 }

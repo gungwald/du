@@ -347,6 +347,7 @@
     <ClInclude Include="path.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="string-utils.h" />
+    <ClInclude Include="trace.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

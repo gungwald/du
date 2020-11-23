@@ -23,7 +23,7 @@ static Path  *allocatePath();
 static TCHAR *standardizePath(TCHAR *path);
 static TCHAR *skipPrefix(TCHAR *path);
 
-Path *new_Path(const TCHAR *name)
+Path *path_Init(const TCHAR *name)
 {
 	Path *path;
 
@@ -44,15 +44,15 @@ TCHAR *standardizePath(TCHAR *path)
 	return replaceAll(path, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }
 
-void delete_Path(Path *path)
+void path_Delete(Path *path)
 {
 	free(path->absolute);
 	free(path->original);
 	free(path);
 }
 
-/* Result must be freed. */
-Path *pathAppend(Path *leftPath, const TCHAR *rightPath)
+/* Returns new Path object which must be deleted. */
+Path *path_Append(Path *leftPath, const TCHAR *rightPath)
 {
 	Path *result;
 	TCHAR *standardizedRightPath;
@@ -63,10 +63,10 @@ Path *pathAppend(Path *leftPath, const TCHAR *rightPath)
 	standardizedRightPath = standardizePath(_tcsdup(rightPath));
 	originalLength = _tcslen(leftPath->original);
 	absoluteLength = _tcslen(leftPath->absolute);
-        if (originalLength == 0) {
-            result->original = _tcsdup(standardizedRightPath);
-        }
-        else if (leftPath->original[originalLength - 1] == _T('\\')) {
+    if (originalLength == 0) {
+        result->original = _tcsdup(standardizedRightPath);
+    }
+    else if (leftPath->original[originalLength - 1] == _T('\\')) {
 		result->original = concat(leftPath->original, standardizedRightPath);
 	}
 	else {
@@ -82,22 +82,22 @@ Path *pathAppend(Path *leftPath, const TCHAR *rightPath)
 	return result;
 }
 
-TCHAR *pathGetAbsolute(Path *path)
+TCHAR *path_GetAbsolute(Path *path)
 {
 	return skipPrefix(path->absolute);
 }
 
-TCHAR *pathGetOriginal(Path *path)
+TCHAR *path_GetOriginal(Path *path)
 {
 	return skipPrefix(path->original);
 }
 
-TCHAR *pathGetAbsoluteRaw(Path *path)
+TCHAR *path_GetAbsoluteRaw(Path *path)
 {
 	return path->absolute;
 }
 
-TCHAR *pathGetOriginalRaw(Path *path)
+TCHAR *path_GetOriginalRaw(Path *path)
 {
 	return path->original;
 }
@@ -161,7 +161,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 	return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-void pathDump(Path *path)
+void path_Dump(Path *path)
 {
 	_tprintf(_T("{ original=%s absolute=%s }\n"), path->original, path->absolute);
 }
@@ -169,7 +169,7 @@ void pathDump(Path *path)
 /**
  * Returns a newly allocated string that must be free'd.
  */
-Path *pathDirName(const Path *path)
+Path *path_GetParentDirectory(const Path *path)
 {
 	Path *dir;
 
@@ -195,7 +195,7 @@ TCHAR *dirname(TCHAR *path)
 	return dir;
 }
 
-TCHAR *pathBaseName(Path *path)
+TCHAR *path_GetUnqualifiedName(Path *path)
 {
 	return _tcsdup(_tcsrchr(path->absolute, _T('\\')) + 1);
 }
