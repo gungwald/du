@@ -18,11 +18,12 @@ struct ListControlBlock
 struct ListNode
 {
 	TCHAR *data;
+	struct ListNode *prev;
 	struct ListNode *next;
 };
 
 typedef
-struct ListControlBlock
+	struct ListControlBlock
 	List;
 
 extern List   *list_init();
@@ -33,3 +34,5 @@ extern void    list_reset(List *list);
 extern TCHAR  *list_getData(List *list);
 extern size_t  list_getSize(List *list);
 extern bool	   list_hasMoreElements(List *list);
+extern bool    list_isEmpty(List *list);
+extern void    list_deleteElement(List *list);

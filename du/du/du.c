@@ -188,18 +188,18 @@ void printFileSize(Path *path, unsigned long size) {
 	if (humanReadable) {
 		if (size >= GIBIBYTE) {
 			hrSize = ((double) size) / ((double) GIBIBYTE);
-			_tprintf(_T("%.1fG    %s\n"), hrSize, path_getOriginal(path));
+			_tprintf(_T("%2.1fG\t%s\n"), hrSize, path_getOriginal(path));
 		}
 		else if (size >= MEBIBYTE) {
 			hrSize = ((double) size) / ((double) MEBIBYTE);
-			_tprintf(_T("%.1fM    %s\n"), hrSize, path_getOriginal(path));
+			_tprintf(_T("%2.1fM\t%s\n"), hrSize, path_getOriginal(path));
 		}
 		else if (size >= KIBIBYTE) {
 			hrSize = ((double) size) / ((double) KIBIBYTE);
-			_tprintf(_T("%.1fK    %s\n"), hrSize, path_getOriginal(path));
+			_tprintf(_T("%2.1fK\t%s\n"), hrSize, path_getOriginal(path));
 		}
 		else {
-			_tprintf(_T("%-7lu %s\n"), size, path_getOriginal(path));
+			_tprintf(_T("%-2lu\t%s\n"), size, path_getOriginal(path));
 		}
 	}
 	else {
