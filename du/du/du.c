@@ -47,6 +47,12 @@
 #include "trace.h"
 #include "list.h"
 
+#ifdef __MSVC__
+#include "getopt.h"
+#else
+#include <getopt.h>
+#endif
+
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
@@ -146,8 +152,21 @@ void version() {
 
 List *setSwitches(int argc, TCHAR *argv[]) {
 	int i;
+	int c;
 	TCHAR *argument;
 	List *remainingArguments;
+	struct option longOptions[] = {
+            {"help",			no_argument, 0,  0 },
+            {"version",			no_argument, 0,  0 },
+            {"all",				no_argument, 0,  0 },
+            {"bytes",			no_argument, 0,  0 },
+            {"summarize",		no_argument, 0, 'c'},
+            {"human-readable",	no_argument, 0,  0 },
+            {0,					0,           0,  0 }
+	};
+	int optionIndex = 0;
+
+	c = getopt_long(argc, argv, "?vabsh", longOptions, &optionIndex);
 
 	remainingArguments = list_init();
 	for (i = 1; i < argc; i++) {
