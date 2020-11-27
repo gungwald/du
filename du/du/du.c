@@ -150,54 +150,102 @@ void version() {
 	_putts(_T("operating systems."));
 }
 
-List *setSwitches(int argc, TCHAR *argv[]) {
+char* convertToUtf8String(const wchar_t* wstr)
+{
+	int wstr_len = (int) wcslen(wstr);
+	int num_chars = WideCharToMultiByte(CP_UTF8, 0, wstr, wstr_len, NULL, 0, NULL, NULL);
+	char* utf8 = (char*) malloc((num_chars + 1) * sizeof(char));
+	if (utf8) {
+		WideCharToMultiByte(CP_UTF8, 0, wstr, wstr_len, utf8, num_chars, NULL, NULL);
+		utf8[num_chars] = '\0';
+	}
+	return utf8;
+}
+
+char **convertToUtf8StringArray(int argc, TCHAR *argv[])
+{
+	char **utf8StringArray;
 	int i;
-	int c;
-	TCHAR *argument;
+
+	utf8StringArray = (char **) malloc(sizeof(char *) * argc);
+	for (i = 0; i < argc; i++) {
+#ifdef UNICODE
+			utf8StringArray[i] = convertToUtf8String(argv[i]);
+#else
+			utf8StringArray[i] = strdup(argv[i]);
+#endif
+	}
+	return utf8StringArray;
+}
+
+void freeUtf8StringArray(int elementCount, char *array[])
+{
+	int i;
+
+	for (i = 0; i < elementCount; i++) {
+		free(array[i]);
+	}
+	free(array);
+}
+
+
+List *setSwitches(int argc, TCHAR *argv[]) {
+	int optionChar;
 	List *remainingArguments;
 	struct option longOptions[] = {
-            {"help",			no_argument, 0,  0 },
-            {"version",			no_argument, 0,  0 },
-            {"all",				no_argument, 0,  0 },
-            {"bytes",			no_argument, 0,  0 },
-            {"summarize",		no_argument, 0, 'c'},
-            {"human-readable",	no_argument, 0,  0 },
-            {0,					0,           0,  0 }
+            {"help",           no_argument, NULL, '?'},
+            {"version",        no_argument, NULL, 'v'},
+            {"all",            no_argument, NULL, 'a'},
+            {"bytes",          no_argument, NULL, 'b'},
+            {"summarize",      no_argument, NULL, 's'},
+            {"human-readable", no_argument, NULL, 'h'},
+            {0,                0,           0,     0 }
 	};
 	int optionIndex = 0;
+	const int END_OF_OPTIONS = -1;
+	char **arguments;
+	/* optind - system sets to index of next argument in argv. */
 
-	c = getopt_long(argc, argv, "?vabsh", longOptions, &optionIndex);
+	arguments = convertToUtf8StringArray(argc, argv);
 
-	remainingArguments = list_init();
-	for (i = 1; i < argc; i++) {
-		argument = argv[i];
-		if (_tcscmp(argument, _T("/?")) == 0 || _tcscmp(argument, _T("-?")) == 0 || _tcscmp(argument, _T("--help")) == 0) {
-			usage();
-			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing help. */
-		}
-		else if (_tcscmp(argument, _T("/v")) == 0 || _tcscmp(argument, _T("-v")) == 0 || _tcscmp(argument, _T("--version")) == 0) {
-			version();
-			exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing the version. */
-		}
-		else if (_tcscmp(argument, _T("/a")) == 0 || _tcscmp(argument, _T("-a")) == 0 || _tcscmp(argument, _T("--all")) == 0) {
-			displayRegularFilesAlso = true;
-		}
-		else if (_tcscmp(argument, _T("/b")) == 0 || _tcscmp(argument, _T("-b")) == 0 || _tcscmp(argument, _T("--bytes")) == 0) {
-			displayBytes = true;
-		}
-		else if (_tcscmp(argument, _T("/s")) == 0 || _tcscmp(argument, _T("-s")) == 0 || _tcscmp(argument, _T("--summarize")) == 0) {
-			summarize = true;
-		}
-		else if (_tcscmp(argument, _T("/h")) == 0 || _tcscmp(argument, _T("-h")) == 0 || _tcscmp(argument, _T("--human-readable")) == 0) {
-			humanReadable = true;
-		}
-		else {
-			list_append(remainingArguments, argument);
+	while ((optionChar = getopt_long(argc, arguments, "?vabsh", longOptions, &optionIndex)) != END_OF_OPTIONS) {
+		switch (optionChar) {
+			case '?':
+				usage();
+				exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing help. */
+				break;
+			case 'v':
+				version();
+				exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing the version. */
+				break;
+			case 'a':
+				displayRegularFilesAlso = true;
+				break;
+			case 'b':
+				displayBytes = true;
+				break;
+			case 's':
+				summarize = true;
+				break;
+			case 'h':
+				humanReadable = true;
+				break;
+			default:
+				_ftprintf(stderr, _T("%s: getopt_long returned unrecognized option: %c\n"), programName, optionChar);
+				exit(EXIT_FAILURE);
 		}
 	}
+
+	freeUtf8StringArray(argc, arguments);
+
 	if (displayRegularFilesAlso && summarize) {
 		_ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
 		exit(EXIT_FAILURE);
+	}
+
+	remainingArguments = list_init();
+	while (optind < argc) {
+		list_append(remainingArguments, argv[optind++]);
 	}
 	return remainingArguments;
 }
