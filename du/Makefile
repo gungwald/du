@@ -5,7 +5,7 @@ all: du
 
 du:
 	$(MAKE) -C du
-	$(MAKE) -C du-unit-tests
+	#$(MAKE) -C du-unit-tests
 	$(MAKE) -C install
 	
 clean:
