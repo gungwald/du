@@ -343,6 +343,7 @@
     <ClInclude Include="build-number.h" />
     <ClInclude Include="du.h" />
     <ClInclude Include="error-handling.h" />
+    <ClInclude Include="getopt.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="resource.h" />

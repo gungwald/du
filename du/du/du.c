@@ -47,7 +47,7 @@
 #include "trace.h"
 #include "list.h"
 
-#ifdef __MSVC__
+#ifdef _MSC_FULL_VER
 #include "getopt.h"
 #else
 #include <getopt.h>
@@ -61,9 +61,9 @@
 #define DEFAULT_PATH _T(".")
 #define FIND_ALL_PATTERN _T("\\*")
 
-#define KIBIBYTE 400
-#define MEBIBYTE 100000
-#define GIBIBYTE 40000000
+#define KIBIBYTE 0x400
+#define MEBIBYTE 0x100000
+#define GIBIBYTE 0x40000000
 
 static void usage();
 static void version();
