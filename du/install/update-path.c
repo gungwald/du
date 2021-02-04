@@ -1,5 +1,3 @@
-// install.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 #include <stdio.h>
 #include <stdlib.h>                 /* EXIT_FAILURE */
@@ -12,13 +10,11 @@
 #include "../du/string-utils.h"
 #include "../du/path.h"
 
-#define STRING_CAPACITY 1024
 #define FILE_TO_INSTALL _T("du.exe")
 #define PATH_REG_VALUE _T("Path")
 
 static TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value);
 static bool fileExists(TCHAR *path);
-static void exitHandler(void);
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[])
@@ -26,40 +22,18 @@ int _tmain(int argc, TCHAR *argv[])
     HKEY environmentKey;
     LSTATUS status;
     TCHAR *path;
-    TCHAR userProfile[STRING_CAPACITY];
-    Path *installDir;
-    Path *homeDir;
-    Path *installTargetFile;
     TCHAR *updatedPath;
     DWORD sizeInBytes;
+    Path *targetDir;
 
     programName = argv[0];
-    atexit(exitHandler);
 
-    if (GetEnvironmentVariable(_T("USERPROFILE"), userProfile, STRING_CAPACITY) == 0) {
-        writeLastError(GetLastError(), _T("Failed to get value of environment variable"), _T("USERPROFILE"));
-        exit(EXIT_FAILURE);
-    }
-
-    homeDir = path_init(userProfile);
-    installDir = path_append(homeDir, _T("bin"));
-    installTargetFile = path_append(installDir, FILE_TO_INSTALL);
-
-    if (!fileExists(installDir->absolute)) {
-        _tprintf(_T("Creating directory %s.\n"), path_getAbsolute(installDir));
-        if (!CreateDirectory(installDir->absolute, NULL)) {
-            writeLastError(GetLastError(), _T("Failed to create install directory"), installDir->absolute);
-            exit(EXIT_FAILURE);
-        }
+    if (argc > 1) {
+        targetDir = path_init(argv[1]);
     }
     else {
-        _tprintf(_T("Directory %s already exists.\n"), path_getAbsolute(installDir));
-    }
-
-    _tprintf(_T("Copying %s to %s\n"), FILE_TO_INSTALL, path_getAbsolute(installDir));
-    if (!CopyFile(FILE_TO_INSTALL, installTargetFile->absolute, FALSE)) {
-		writeLastError(GetLastError(), _T("Failed to copy file"), installTargetFile->absolute);
-		exit(EXIT_FAILURE);
+        _ftprintf(stderr, _TEXT("Missing command line parameter for [TARGETDIR]"));
+        exit(EXIT_FAILURE);
     }
 
     status = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Environment"), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &environmentKey);
@@ -69,14 +43,14 @@ int _tmain(int argc, TCHAR *argv[])
     }
 
 	path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
-    if (_tcsstr(path, path_getAbsolute(installDir)) == NULL) {
+    if (_tcsstr(path, path_getAbsolute(targetDir)) == NULL) {
         /* Our installDir is not in the Path yet. */
-        _tprintf(_T("Appending %s to user Path in the registry.\n"), path_getAbsolute(installDir));
+        _tprintf(_T("Appending %s to user Path in the registry.\n"), path_getAbsolute(targetDir));
         if (path[_tcslen(path) - 1] == ';') {
-            updatedPath = concat(path, path_getAbsolute(installDir));
+            updatedPath = concat(path, path_getAbsolute(targetDir));
         }
         else {
-            updatedPath = concat3(path, _T(";"), path_getAbsolute(installDir));
+            updatedPath = concat3(path, _T(";"), path_getAbsolute(targetDir));
         }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
         status = RegSetValueEx(environmentKey, PATH_REG_VALUE, 0, REG_EXPAND_SZ, (const BYTE *) updatedPath, sizeInBytes);
@@ -86,19 +60,10 @@ int _tmain(int argc, TCHAR *argv[])
         free(updatedPath);
 	}
     else {
-        _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), path_getAbsolute(installDir));
+        _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), path_getAbsolute(targetDir));
     }
 	free(path);
-    path_free(installTargetFile);
-    path_free(installDir);
-    path_free(homeDir);
     return EXIT_SUCCESS;
-}
-
-void exitHandler(void)
-{
-    _tprintf(_T("Press any key to exit the install program."));
-    _getch();
 }
 
 TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)

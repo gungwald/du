@@ -31,12 +31,30 @@ void list_deleteElement(List *list)
 {
 	struct ListNode *element;
 
-	if (list->current != NULL) {
-		element = list->current;
-		element->prev->next = element->next;
-		element->next->prev = element->prev;
+	element = list->current;
+
+	if (element != NULL) {
+		struct ListNode *prev;
+		struct ListNode *next;
+		
+		prev = element->prev;
+		next = element->next;
+
+		if (prev != NULL) {
+			prev->next = next;
+		}
+		if (next != NULL) {
+			next->prev = prev;
+		}
 		free(element->data);
 		free(element);
+		list->current = next;
+		if (prev == NULL) {
+			list->first = next;
+		}
+		if (next == NULL) {
+			list->last = prev;
+		}
 		list->size -= 1;
 	}
 }

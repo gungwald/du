@@ -24,7 +24,7 @@
     <ClCompile Include="..\du\string-utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="install.c">
+    <ClCompile Include="update-path.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

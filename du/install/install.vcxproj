@@ -38,8 +38,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{49be41d4-8e0e-4a3d-afc7-4f7b7a3aabb9}</ProjectGuid>
-    <RootNamespace>install</RootNamespace>
+    <RootNamespace>update-path</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>update-path</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -174,7 +175,7 @@
     <ClCompile Include="..\du\error-handling.c" />
     <ClCompile Include="..\du\path.c" />
     <ClCompile Include="..\du\string-utils.c" />
-    <ClCompile Include="install.c" />
+    <ClCompile Include="update-path.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\du\error-handling.h" />

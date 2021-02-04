@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * du.cpp
- * Copyright (c) 2004 Bill Chatfield
+ * Copyright (c) 2004, 2021 Bill Chatfield
  * All rights reserved
  *
  * This program is free software; you can redistribute it and/or modify
