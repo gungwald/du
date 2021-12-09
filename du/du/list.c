@@ -59,12 +59,12 @@ void list_deleteElement(List *list)
 	}
 }
 
-List *list_append(List *list, TCHAR *data)
+List *list_append(List *list, void *data)
 {
 	struct ListNode *node;
 
 	node = (struct ListNode *) malloc(sizeof(struct ListNode));
-	node->data = _tcsdup(data);
+	node->data = data;
 	node->next = NULL;
 	if (list->last == NULL) {
 		list->first = node;
@@ -81,7 +81,7 @@ List *list_append(List *list, TCHAR *data)
 	return list;
 }
 
-TCHAR *list_getData(List *list)
+void *list_getData(List *list)
 {
 	return list->current->data;
 }
