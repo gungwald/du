@@ -337,7 +337,7 @@
     <ClCompile Include="du.c" />
     <ClCompile Include="error-handling.c" />
     <ClCompile Include="list.c" />
-    <ClCompile Include="path.c" />
+    <ClCompile Include="File.c" />
     <ClCompile Include="string-utils.c" />
   </ItemGroup>
   <ItemGroup>
@@ -346,7 +346,7 @@
     <ClInclude Include="error-handling.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="list.h" />
-    <ClInclude Include="path.h" />
+    <ClInclude Include="File.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="string-utils.h" />
     <ClInclude Include="trace.h" />

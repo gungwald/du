@@ -107,14 +107,14 @@ unsigned long calcDiskUsageOfArgument(const TCHAR *argument)
 	size_t diskUsage;
 
 	TRACE_ENTER(__func__, _T("argument"), argument);
-	path = path_init(argument);
+	path = initPath(argument);
 	if (isGlob(argument)) { /* Will be true if compiled with Visual C++, but not with GCC. */
 		diskUsage = calcDiskUsageOfFilesMatchingPattern(path, true);
 	}
 	else {
 		diskUsage = calcDiskUsageOfFile(path, true);
 	}
-	path_free(path);
+	freePath(path);
 	TRACE_RETURN_ULONG(__func__, diskUsage);
 	return diskUsage;
 }
@@ -303,9 +303,9 @@ unsigned long calcDiskUsageOfFilesMatchingPattern(Path *path, bool isTopLevel) {
 		while (moreMatchesForThisArgument) {
 			entryBasename = fileProperties.cFileName;
 			if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
-				directoryEntry = path_append(searchDirectory, entryBasename);
+				directoryEntry = appendPath(searchDirectory, entryBasename);
 				totalSize += calcDiskUsageOfFile(directoryEntry, true);
-				path_free(directoryEntry);
+				freePath(directoryEntry);
 			}
 			if (!FindNextFile(findHandle, &fileProperties)) {
 				lastError = GetLastError();
@@ -317,7 +317,7 @@ unsigned long calcDiskUsageOfFilesMatchingPattern(Path *path, bool isTopLevel) {
 				}
 			}
 		}
-		path_free(searchDirectory);
+		freePath(searchDirectory);
 		FindClose(findHandle); /* Only close it if it got opened successfully */
 	}
 	TRACE_RETURN_ULONG(__func__, totalSize);
@@ -336,7 +336,7 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 
 	TRACE_ENTER_CALLBACK(__func__, _T("path"), path_dump, path);
 
-	searchPattern = path_append(path, _T("*"));
+	searchPattern = appendPath(path, _T("*"));
 	if (searchPattern != NULL) {
 		findHandle = FindFirstFile(path_getAbsoluteRaw(searchPattern), &fileProperties);
 		if (findHandle == INVALID_HANDLE_VALUE) {
@@ -346,9 +346,9 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 			while (moreDirectoryEntries) {
 				entryBasename = fileProperties.cFileName;
 				if (_tcscmp(entryBasename, _T(".")) != 0 && _tcscmp(entryBasename, _T("..")) != 0) {
-					if ((dirEntry = path_append(path, entryBasename)) != NULL) {
+					if ((dirEntry = appendPath(path, entryBasename)) != NULL) {
 						size += calcDiskUsageOfFile(dirEntry, false); /* RECURSION */
-						path_free(dirEntry);
+						freePath(dirEntry);
 					}
 				}
 				if (!FindNextFile(findHandle, &fileProperties)) {
@@ -365,7 +365,7 @@ unsigned long calcDiskUsageOfDirectory(Path *path, bool isTopLevel) {
 				printFileSize(path, size);
 			}
 		}
-		path_free(searchPattern);
+		freePath(searchPattern);
 	}
 	TRACE_RETURN_ULONG(__func__, size);
 	return size;

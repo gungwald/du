@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "path.h"
+#include "file.h"
 #include "string-utils.h"
 #include "error-handling.h"
 #include "trace.h"
@@ -19,87 +19,68 @@
 
 static TCHAR *prefixForExtendedLengthPath(const TCHAR *path);
 static TCHAR *queryForAbsolutePath(const TCHAR *path);
-static Path  *allocatePath();
-static TCHAR *standardizePath(TCHAR *path);
+static File  *allocateFile();
+static TCHAR *slashToBackslash(TCHAR *path);
 static TCHAR *skipPrefix(TCHAR *path);
 
-Path *path_init(const TCHAR *name)
+File *new_File(const TCHAR *name)
 {
-	Path *path;
+	File *f;
+	TCHAR *path;
 
-	path = (Path *) malloc(sizeof(Path));
-	if (path == NULL) {
-		writeError(errno, _T("failed to allocate memory for Path variable"), name);
+	f = (File *) malloc(sizeof(File));
+	if (f == NULL) {
+		writeError(errno, _T("failed to allocate memory for File variable"), name);
 		exit(EXIT_FAILURE);
 	}
 	else {
-		path->original = standardizePath(_tcsdup(name));
-		path->absolute = queryForAbsolutePath(path->original);
+		path = slashToBackslash(prefixForExtendedLengthPath(name));
+		f->extendedLengthAbsolutePath = queryForAbsolutePath(path);
+		f->path = f->extendedLengthAbsolutePath + (_tcslen(f->extendedLengthAbsolutePath) - _tcslen(path));
+		free(path);
 	}
-	return path;
+	return f;
 }
 
-TCHAR *standardizePath(TCHAR *path)
+/* Returns new Path object which must be deleted. */
+File *new_FileWithChild(const File *parent, const TCHAR *child)
+{
+	File *result;
+	TCHAR *standardizedChild;
+	size_t parentLength;
+
+	result = allocateFile();
+	standardizedChild = slashToBackslash(_tcsdup(child));
+	result->extendedLengthAbsolutePath = concat3(parent->extendedLengthAbsolutePath, DIR_SEPARATOR, standardizedChild);
+	result->path = result->extendedLengthAbsolutePath + _tcslen(parent->path);
+	free(standardizedChild);
+	return result;
+}
+
+TCHAR *slashToBackslash(TCHAR *path)
 {
 	return replaceAll(path, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }
 
-void path_free(Path *path)
+void delete_File(File *f)
 {
-	free(path->absolute);
-	free(path->original);
-	free(path);
+	free(f->extendedLengthAbsolutePath);
+	free(f);
 }
 
-/* Returns new Path object which must be deleted. */
-Path *path_append(Path *leftPath, const TCHAR *rightPath)
+TCHAR *getAbsolutePath(File *f)
 {
-	Path *result;
-	TCHAR *standardizedRightPath;
-	size_t originalLength;
-	size_t absoluteLength;
-
-	result = allocatePath();
-	standardizedRightPath = standardizePath(_tcsdup(rightPath));
-	originalLength = _tcslen(leftPath->original);
-	absoluteLength = _tcslen(leftPath->absolute);
-    if (originalLength == 0) {
-        result->original = _tcsdup(standardizedRightPath);
-    }
-    else if (leftPath->original[originalLength - 1] == _T('\\')) {
-		result->original = concat(leftPath->original, standardizedRightPath);
-	}
-	else {
-		result->original = concat3(leftPath->original, DIR_SEPARATOR, standardizedRightPath);
-	}
-	if (leftPath->absolute[absoluteLength - 1] == _T('\\')) {
-		result->absolute = concat(leftPath->absolute, standardizedRightPath);
-	}
-	else {
-		result->absolute = concat3(leftPath->absolute, DIR_SEPARATOR, standardizedRightPath);
-	}
-	free(standardizedRightPath);
-	return result;
+	return skipPrefix(f->extendedLengthAbsolutePath);
 }
 
-TCHAR *path_getAbsolute(Path *path)
+TCHAR *getPath(File *f)
 {
-	return skipPrefix(path->absolute);
+	return f->path;
 }
 
-TCHAR *path_getOriginal(Path *path)
+TCHAR *getAbsolutePathExtLen(File *f)
 {
-	return skipPrefix(path->original);
-}
-
-TCHAR *path_getAbsoluteRaw(Path *path)
-{
-	return path->absolute;
-}
-
-TCHAR *path_getOriginalRaw(Path *path)
-{
-	return path->original;
+	return f->extendedLengthAbsolutePath;
 }
 
 /* Result must be freed. */
@@ -144,13 +125,13 @@ TCHAR *queryForAbsolutePath(const TCHAR *path) {
 
 
 /* Result must be freed. */
-Path *allocatePath()
+File *allocateFile()
 {
-	Path *path;
+	File *path;
 
-	path = (Path *) malloc(sizeof(Path));
+	path = (File *) malloc(sizeof(File));
 	if (path == NULL) {
-		writeError(errno, _T("failed to allocate memory"), _T("Path"));
+		writeError(errno, _T("failed to allocate memory"), _T("File"));
 		exit(EXIT_FAILURE);
 	}
 	return path;
@@ -161,24 +142,25 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 	return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-void path_dump(Path *path)
+void path_dump(File *path)
 {
-	_tprintf(_T("{ original=%s absolute=%s }\n"), path->original, path->absolute);
+	_tprintf(_T("{ extLenPath=%s absolute=%s }\n"), path->extLenPath, path->extLenAbsolutePath);
 }
 
 /**
- * Returns a newly allocated string that must be free'd.
+ * Returns a newly allocated object that must be free'd.
  */
-Path *path_getParentDirectory(const Path *path)
+File *getParent(const File *f)
 {
-	Path *dir;
+	File *parent;
 
-	dir = allocatePath();
-	dir->original = dirname(path->original);
-	dir->absolute = dirname(path->absolute);
-	return dir;
+	parent = allocateFile();
+	parent->extLenPath = dirname(getAbsolutePath(f));
+	parent->extLenAbsolutePath = NULL;
+	return parent;
 }
 
+/* Result must be freed. */
 TCHAR *dirname(TCHAR *path)
 {
 	TCHAR *dir;
@@ -195,11 +177,13 @@ TCHAR *dirname(TCHAR *path)
 	return dir;
 }
 
-TCHAR *path_getUnqualifiedName(Path *path)
+/* Returns pointer which should not be freed. */
+TCHAR *getName(File *f)
 {
-	return _tcsdup(_tcsrchr(path->absolute, _T('\\')) + 1);
+	return _tcsrchr(getAbsolutePath(f), _T('\\')) + 1;
 }
 
+/* Returns pointer which should not be freed. */
 TCHAR *skipPrefix(TCHAR *path)
 {
     size_t prefixLength;
