@@ -28,6 +28,7 @@ File *new_File(const TCHAR *name)
 {
 	File *f;
 	TCHAR *path;
+	TCHAR *absPath;
 
 	f = (File *) malloc(sizeof(File));
 	if (f == NULL) {
@@ -35,11 +36,13 @@ File *new_File(const TCHAR *name)
 		exit(EXIT_FAILURE);
 	}
 	else {
-		path = slashToBackslash(prefixForExtendedLengthPath(name));
-		f->extendedLengthAbsolutePath = queryForAbsolutePath(path);
+		path = slashToBackslash(name);
+		absPath = queryForAbsolutePath(path);
+		f->extendedLengthAbsolutePath = prefixForExtendedLengthPath(absPath);
 		f->path = f->extendedLengthAbsolutePath + (_tcslen(f->extendedLengthAbsolutePath) - _tcslen(path));
 		f->type = FILETYPE_UNSET;
 		free(path);
+		free(absPath);
 	}
 	return f;
 }
@@ -51,7 +54,7 @@ File *new_FileWithChild(const File *parent, const TCHAR *child)
 	TCHAR *standardizedChild;
 
 	result = allocateFile();
-	standardizedChild = slashToBackslash(_tcsdup(child));
+	standardizedChild = slashToBackslash(child);
 	result->extendedLengthAbsolutePath = concat3(parent->extendedLengthAbsolutePath, DIR_SEPARATOR, standardizedChild);
 	result->path = result->extendedLengthAbsolutePath + _tcslen(parent->path);
 	result->type = FILETYPE_UNSET;
@@ -59,10 +62,10 @@ File *new_FileWithChild(const File *parent, const TCHAR *child)
 	return result;
 }
 
-/* path is modified. Result should not be freed. */
+/* Result should be freed. */
 static TCHAR *slashToBackslash(TCHAR *path)
 {
-	return replaceAll(path, _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
+	return replaceAll(_tcsdup(path), _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }
 
 void freeFile(File *f)
@@ -89,7 +92,6 @@ TCHAR *getAbsolutePathExtLength(const File *f)
 /* Result must be freed. */
 TCHAR *queryForAbsolutePath(const TCHAR *path) {
 	TCHAR *absolutePath = NULL;
-	TCHAR *prefixedPath = NULL;
 	DWORD requiredBufferSize;
 	DWORD returnedPathLength;
 
@@ -111,6 +113,7 @@ TCHAR *queryForAbsolutePath(const TCHAR *path) {
 			returnedPathLength = GetFullPathName(path, requiredBufferSize, absolutePath, NULL);
 			if (returnedPathLength == 0) {
 				writeLastError(GetLastError(), _T("failed to get full path name for "), path);
+				exit(EXIT_FAILURE);
 			}
 			else if (returnedPathLength >= requiredBufferSize) {
 				writeLastError(GetLastError(), _T("buffer was not big enough for "), path);
@@ -118,12 +121,8 @@ TCHAR *queryForAbsolutePath(const TCHAR *path) {
 			}
 		}
 	}
-	if (absolutePath != NULL) {
-		prefixedPath = prefixForExtendedLengthPath(absolutePath);
-		free(absolutePath);
-	}
-	TRACE_RETURN(_T("queryForAbsolutePath"), prefixedPath);
-	return prefixedPath;
+	TRACE_RETURN(_T("queryForAbsolutePath"), absolutePath);
+	return absolutePath;
 }
 
 

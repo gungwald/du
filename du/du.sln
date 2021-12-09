@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "du-unit-tests", "du-unit-te
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "du-setup", "setup\setup.vdproj", "{10B5736E-2FD7-4CEE-BE42-FCA6651E57F5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetFullPathName-tests", "GetFullPathName-tests\GetFullPathName-tests.vcxproj", "{FFA0368A-66BA-40AC-9110-16FACCEDF650}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -77,6 +79,18 @@ Global
 		{10B5736E-2FD7-4CEE-BE42-FCA6651E57F5}.Release|ARM64.ActiveCfg = Release
 		{10B5736E-2FD7-4CEE-BE42-FCA6651E57F5}.Release|x64.ActiveCfg = Release
 		{10B5736E-2FD7-4CEE-BE42-FCA6651E57F5}.Release|x86.ActiveCfg = Release
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|ARM.ActiveCfg = Debug|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|x64.ActiveCfg = Debug|x64
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|x64.Build.0 = Debug|x64
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|x86.ActiveCfg = Debug|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Debug|x86.Build.0 = Debug|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|ARM.ActiveCfg = Release|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|ARM64.ActiveCfg = Release|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|x64.ActiveCfg = Release|x64
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|x64.Build.0 = Release|x64
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|x86.ActiveCfg = Release|Win32
+		{FFA0368A-66BA-40AC-9110-16FACCEDF650}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
