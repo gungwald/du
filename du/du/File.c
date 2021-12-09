@@ -27,7 +27,6 @@ static TCHAR *skipPrefix(TCHAR *path);
 File *new_File(const TCHAR *name)
 {
 	File *f;
-	TCHAR *path;
 	TCHAR *absPath;
 
 	f = (File *) malloc(sizeof(File));
@@ -36,12 +35,10 @@ File *new_File(const TCHAR *name)
 		exit(EXIT_FAILURE);
 	}
 	else {
-		path = slashToBackslash(name);
-		absPath = queryForAbsolutePath(path);
+		f->path = slashToBackslash(name);
+		absPath = queryForAbsolutePath(f->path);
 		f->extendedLengthAbsolutePath = prefixForExtendedLengthPath(absPath);
-		f->path = f->extendedLengthAbsolutePath + (_tcslen(f->extendedLengthAbsolutePath) - _tcslen(path));
 		f->type = FILETYPE_UNSET;
-		free(path);
 		free(absPath);
 	}
 	return f;
@@ -51,14 +48,11 @@ File *new_File(const TCHAR *name)
 File *new_FileWithChild(const File *parent, const TCHAR *child)
 {
 	File *result;
-	TCHAR *standardizedChild;
 
 	result = allocateFile();
-	standardizedChild = slashToBackslash(child);
-	result->extendedLengthAbsolutePath = concat3(parent->extendedLengthAbsolutePath, DIR_SEPARATOR, standardizedChild);
-	result->path = result->extendedLengthAbsolutePath + _tcslen(parent->path);
+	result->path = slashToBackslash(child);
+	result->extendedLengthAbsolutePath = concat3(parent->extendedLengthAbsolutePath, DIR_SEPARATOR, result->path);
 	result->type = FILETYPE_UNSET;
-	free(standardizedChild);
 	return result;
 }
 
@@ -70,6 +64,7 @@ static TCHAR *slashToBackslash(TCHAR *path)
 
 void freeFile(File *f)
 {
+	free(f->path);
 	free(f->extendedLengthAbsolutePath);
 	free(f);
 }
@@ -146,7 +141,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 
 void printPath(const File *path)
 {
-	_tprintf(_T("{ %s }\n"), path->extendedLengthAbsolutePath);
+	_tprintf(_T("{ %s %s %d }\n"), path->path, path->extendedLengthAbsolutePath, path->type);
 }
 
 /**
@@ -157,8 +152,8 @@ File *getParent(const File *f)
 	File *parent;
 
 	parent = allocateFile();
-	parent->extendedLengthAbsolutePath = dirname(getAbsolutePath(f));
-	parent->path = parent->extendedLengthAbsolutePath;
+	parent->extendedLengthAbsolutePath = dirname(getAbsolutePathExtLength(f));
+	parent->path = _tcsdup(getAbsolutePath(parent));
 	parent->type = FILETYPE_DIRECTORY;
 	return parent;
 }
@@ -222,7 +217,6 @@ unsigned long getLength(File *f)
 		size = fileProperties.nFileSizeHigh * multiplier + fileProperties.nFileSizeLow;
 		FindClose(findHandle);
 	}
-	f->length = size;
 	TRACE_RETURN_ULONG(__func__, size);
 	return size;
 }
@@ -274,12 +268,11 @@ List *listFiles(const File *f)
 }
 
 enum FileType populateFileType(File *f)
-
 {
 	DWORD fileAttributes;
 
 	if (f->type == FILETYPE_UNSET) {
-		if (isGlob(f->extendedLengthAbsolutePath)) {
+		if (isGlob(getAbsolutePath(f))) {
 			f->type = FILETYPE_GLOB;
 		} else {
 			fileAttributes = GetFileAttributes(getAbsolutePathExtLength(f));
