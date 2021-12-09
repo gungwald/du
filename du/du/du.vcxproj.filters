@@ -30,6 +30,12 @@
     <ClCompile Include="File.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="help.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="args.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -60,6 +66,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="help.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="args.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

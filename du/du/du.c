@@ -40,18 +40,12 @@
 #include <windows.h>
 #include <tchar.h>
 #include "File.h"
-#include "build-number.h"
-#include "version.h"
 #include "string-utils.h"
 #include "error-handling.h"
 #include "trace.h"
 #include "list.h"
-
-#ifdef _MSC_FULL_VER
-#include "getopt.h"
-#else
-#include <getopt.h>
-#endif
+#include "args.h"
+#include "help.h"
 
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
@@ -65,16 +59,9 @@
 #define MEBIBYTE 0x100000
 #define GIBIBYTE 0x40000000
 
-static void usage();
-static void version();
-static List *setSwitches(int argc, TCHAR *argv[]);
 static void printFileSize(File *path, unsigned long size);
 static unsigned long calcDiskUsage(File *path, bool isTopLevel);
 
-bool displayRegularFilesAlso = false;
-bool displayBytes = false;
-bool summarize = false;
-bool humanReadable = false;
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[]) {
@@ -93,144 +80,13 @@ int _tmain(int argc, TCHAR *argv[]) {
 		}
 	}
 	else {
-		argument = new_file(DEFAULT_PATH);
+		argument = new_File(DEFAULT_PATH);
 		calcDiskUsage(argument, true);
 		freeFile(argument);
 	}
 	list_free(nonSwitchArguments);
 	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
 	return EXIT_SUCCESS;
-}
-
-void usage() {
-	_putts(_T("Usage: du [OPTION]... [FILE]..."));
-	_putts(_T("Summarize disk usage of each FILE, recursively for directories."));
-	_putts(_T("File and directory sizes are written in kilobytes."));
-	_putts(_T("1 kilobyte = 1024 bytes"));
-	_putts(_T(""));
-	_putts(_T("  /a, -a, --all            write counts for all files, not just directories"));
-	_putts(_T("  /b, -b, --bytes          print size in bytes"));
-	_putts(_T("  /h, -h, --human-readable print sizes in human readable format (e.g., 1K 234M 2G)"));
-	_putts(_T("  /s, -s, --summarize      display only a total for each argument"));
-	_putts(_T("  /?, -?, --help           display this help and exit"));
-	_putts(_T("  /v, -v, --version        output version information and exit"));
-	_putts(_T(""));
-	_putts(_T("Example: du -s *"));
-	_putts(_T(""));
-	_putts(_T("Report bugs at https://github.com/gungwald/du"));
-}
-
-void version() {
-	_tprintf(_T("du for Windows - Version %d.%d.%d.%d\n"), VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD);
-	_putts(_T(VER_COPYRIGHT_STR));
-	_putts(_T("Distributed under the GNU General Public License v3."));
-	_putts(_T(""));
-	_putts(_T("This du is written to the native Win32 API so that"));
-	_putts(_T("it will be as fast as possible.  It does not depend"));
-	_putts(_T("on any special UNIX emulation libraries.  It also"));
-	_putts(_T("displays correct values for file and directory sizes"));
-	_putts(_T("unlike some other versions of du ported from UNIX-like"));
-	_putts(_T("operating systems."));
-}
-
-char *convertToUtf8String(const wchar_t* wstr)
-{
-	int wstr_len = (int) wcslen(wstr);
-	int num_chars = WideCharToMultiByte(CP_UTF8, 0, wstr, wstr_len, NULL, 0, NULL, NULL);
-	char* utf8 = (char*) malloc((num_chars + 1) * sizeof(char));
-	if (utf8) {
-		WideCharToMultiByte(CP_UTF8, 0, wstr, wstr_len, utf8, num_chars, NULL, NULL);
-		utf8[num_chars] = '\0';
-	}
-	return utf8;
-}
-
-char **convertToUtf8StringArray(int argc, TCHAR *argv[])
-{
-	char **utf8StringArray;
-	int i;
-
-	utf8StringArray = (char **) malloc(sizeof(char *) * argc);
-	for (i = 0; i < argc; i++) {
-#ifdef UNICODE
-			utf8StringArray[i] = convertToUtf8String(argv[i]);
-#else
-			utf8StringArray[i] = strdup(argv[i]);
-#endif
-	}
-	return utf8StringArray;
-}
-
-void freeUtf8StringArray(int elementCount, char *array[])
-{
-	int i;
-
-	for (i = 0; i < elementCount; i++) {
-		free(array[i]);
-	}
-	free(array);
-}
-
-
-List *setSwitches(int argc, TCHAR *argv[]) {
-	int optionChar;
-	List *remainingArguments;
-	struct option longOptions[] = {
-            {"help",           no_argument, NULL, '?'},
-            {"version",        no_argument, NULL, 'v'},
-            {"all",            no_argument, NULL, 'a'},
-            {"bytes",          no_argument, NULL, 'b'},
-            {"summarize",      no_argument, NULL, 's'},
-            {"human-readable", no_argument, NULL, 'h'},
-            {0,                0,           0,     0 }
-	};
-	int optionIndex = 0;
-	const int END_OF_OPTIONS = -1;
-	char **arguments;
-	/* optind - system sets to index of next argument in argv. */
-
-	arguments = convertToUtf8StringArray(argc, argv);
-
-	while ((optionChar = getopt_long(argc, arguments, "?vabsh", longOptions, &optionIndex)) != END_OF_OPTIONS) {
-		switch (optionChar) {
-			case '?':
-				usage();
-				exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing help. */
-				break;
-			case 'v':
-				version();
-				exit(EXIT_SUCCESS);	/* The Linux man page says to exit after printing the version. */
-				break;
-			case 'a':
-				displayRegularFilesAlso = true;
-				break;
-			case 'b':
-				displayBytes = true;
-				break;
-			case 's':
-				summarize = true;
-				break;
-			case 'h':
-				humanReadable = true;
-				break;
-			default:
-				_ftprintf(stderr, _T("%s: getopt_long returned unrecognized option: %c\n"), programName, optionChar);
-				exit(EXIT_FAILURE);
-		}
-	}
-
-	freeUtf8StringArray(argc, arguments);
-
-	if (displayRegularFilesAlso && summarize) {
-		_ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
-		exit(EXIT_FAILURE);
-	}
-
-	remainingArguments = list_init();
-	while (optind < argc) {
-		list_append(remainingArguments, argv[optind++]);
-	}
-	return remainingArguments;
 }
 
 void printFileSize(File *f, unsigned long size) {

@@ -40,8 +40,8 @@ extern TCHAR *getName(const File *f);
 extern TCHAR *dirname(const TCHAR *f);
 extern unsigned long getLength(File *f);
 extern List *listFiles(const File *f);
-extern bool isFile(const File *f);
-extern bool isDirectory(const File *f);
-extern bool isGlobPattern(const File *f);
+extern bool isFile(File *f);
+extern bool isDirectory(File *f);
+extern bool isGlobPattern(File *f);
 
 #endif

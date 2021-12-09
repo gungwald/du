@@ -49,7 +49,6 @@ File *new_FileWithChild(const File *parent, const TCHAR *child)
 {
 	File *result;
 	TCHAR *standardizedChild;
-	size_t parentLength;
 
 	result = allocateFile();
 	standardizedChild = slashToBackslash(_tcsdup(child));
@@ -72,17 +71,17 @@ void freeFile(File *f)
 	free(f);
 }
 
-TCHAR *getAbsolutePath(File *f)
+TCHAR *getAbsolutePath(const File *f)
 {
 	return skipPrefix(f->extendedLengthAbsolutePath);
 }
 
-TCHAR *getPath(File *f)
+TCHAR *getPath(const File *f)
 {
 	return f->path;
 }
 
-TCHAR *getAbsolutePathExtLength(File *f)
+TCHAR *getAbsolutePathExtLength(const File *f)
 {
 	return f->extendedLengthAbsolutePath;
 }
@@ -146,7 +145,7 @@ TCHAR* prefixForExtendedLengthPath(const TCHAR *path) {
 	return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-void printPath(File *path)
+void printPath(const File *path)
 {
 	_tprintf(_T("{ %s }\n"), path->extendedLengthAbsolutePath);
 }
@@ -166,7 +165,7 @@ File *getParent(const File *f)
 }
 
 /* Result must be freed. */
-TCHAR *dirname(TCHAR *path)
+TCHAR *dirname(const TCHAR *path)
 {
 	TCHAR *dir;
 	TCHAR *lastBackslashPointer;
@@ -183,7 +182,7 @@ TCHAR *dirname(TCHAR *path)
 }
 
 /* Returns pointer which should not be freed. */
-TCHAR *getName(File *f)
+TCHAR *getName(const File *f)
 {
 	return _tcsrchr(getAbsolutePath(f), _T('\\')) + 1;
 }

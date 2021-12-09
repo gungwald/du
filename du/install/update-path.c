@@ -8,7 +8,7 @@
 #include <conio.h>
 #include "../du/error-handling.h"
 #include "../du/string-utils.h"
-#include "../du/path.h"
+#include "../du/File.h"
 
 #define FILE_TO_INSTALL _T("du.exe")
 #define PATH_REG_VALUE _T("Path")
@@ -24,12 +24,12 @@ int _tmain(int argc, TCHAR *argv[])
     TCHAR *path;
     TCHAR *updatedPath;
     DWORD sizeInBytes;
-    Path *targetDir;
+    File *targetDir;
 
     programName = argv[0];
 
     if (argc > 1) {
-        targetDir = path_init(argv[1]);
+        targetDir = new_File(argv[1]);
     }
     else {
         _ftprintf(stderr, _TEXT("Missing command line parameter for [TARGETDIR]"));
@@ -43,14 +43,14 @@ int _tmain(int argc, TCHAR *argv[])
     }
 
 	path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
-    if (_tcsstr(path, path_getAbsolute(targetDir)) == NULL) {
+    if (_tcsstr(path, getAbsolutePath(targetDir)) == NULL) {
         /* Our installDir is not in the Path yet. */
-        _tprintf(_T("Appending %s to user Path in the registry.\n"), path_getAbsolute(targetDir));
+        _tprintf(_T("Appending %s to user Path in the registry.\n"), getAbsolutePath(targetDir));
         if (path[_tcslen(path) - 1] == ';') {
-            updatedPath = concat(path, path_getAbsolute(targetDir));
+            updatedPath = concat(path, getAbsolutePath(targetDir));
         }
         else {
-            updatedPath = concat3(path, _T(";"), path_getAbsolute(targetDir));
+            updatedPath = concat3(path, _T(";"), getAbsolutePath(targetDir));
         }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
         status = RegSetValueEx(environmentKey, PATH_REG_VALUE, 0, REG_EXPAND_SZ, (const BYTE *) updatedPath, sizeInBytes);
@@ -60,7 +60,7 @@ int _tmain(int argc, TCHAR *argv[])
         free(updatedPath);
 	}
     else {
-        _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), path_getAbsolute(targetDir));
+        _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), getAbsolutePath(targetDir));
     }
 	free(path);
     return EXIT_SUCCESS;

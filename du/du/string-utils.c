@@ -87,3 +87,48 @@ _TCHAR *replaceAll(_TCHAR *s, _TCHAR searchFor, _TCHAR replaceWith)
 	return s;
 }
 
+char *convertWideCharStringToUtf8(const wchar_t *wideCharString)
+{
+	int sizeInBytesOfBufferNeeded;
+	char *utf8StringResult;
+
+	/* This will include string terminator because of the -1 argument. */
+	sizeInBytesOfBufferNeeded = WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, NULL, 0, NULL, NULL);
+	utf8StringResult = (char *) malloc(sizeInBytesOfBufferNeeded);
+	if (utf8StringResult) {
+		/* This will include string terminator because of the -1 argument. */
+		WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, utf8StringResult, sizeInBytesOfBufferNeeded, NULL, NULL);
+	}
+	else {
+		_tperror(_T("Failed to convert wide character to UTF-8"));
+		exit(EXIT_FAILURE);
+	}
+	return utf8StringResult;
+}
+
+char **convertTcharStringArrayToUtf8(int argc, TCHAR *argv[])
+{
+	char **utf8StringArray;
+	int i;
+
+	utf8StringArray = (char **) malloc(sizeof(char *) * argc);
+	for (i = 0; i < argc; i++) {
+#ifdef UNICODE
+			utf8StringArray[i] = convertWideCharStringToUtf8(argv[i]);
+#else
+			utf8StringArray[i] = strdup(argv[i]);
+#endif
+	}
+	return utf8StringArray;
+}
+
+void freeStringArray(int elementCount, char *array[])
+{
+	int i;
+
+	for (i = 0; i < elementCount; i++) {
+		free(array[i]);
+	}
+	free(array);
+}
+

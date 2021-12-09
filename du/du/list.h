@@ -28,7 +28,7 @@ typedef
 
 extern List   *list_init();
 extern void    list_free(List *list);
-extern List   *list_append(List *list, TCHAR *data);
+extern List   *list_append(List *list, void *data);
 extern void    list_advance(List *list);
 extern void    list_reset(List *list);
 extern void   *list_getData(List *list);

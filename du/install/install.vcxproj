@@ -173,13 +173,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\du\error-handling.c" />
-    <ClCompile Include="..\du\path.c" />
+    <ClCompile Include="..\du\File.c" />
+    <ClCompile Include="..\du\list.c" />
     <ClCompile Include="..\du\string-utils.c" />
     <ClCompile Include="update-path.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\du\error-handling.h" />
-    <ClInclude Include="..\du\path.h" />
+    <ClInclude Include="..\du\File.h" />
+    <ClInclude Include="..\du\list.h" />
     <ClInclude Include="..\du\string-utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
