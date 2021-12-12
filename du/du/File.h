@@ -14,6 +14,12 @@
 
 #define DIR_SEPARATOR _T("\\")
 
+#ifdef UNICODE
+#define EXTENDED_LENGTH_PATH_PREFIX _T("\\\\?\\")
+#else
+#define EXTENDED_LENGTH_PATH_PREFIX ""
+#endif
+
 enum FileType {FILETYPE_UNSET, FILETYPE_FILE, FILETYPE_DIRECTORY, FILETYPE_GLOB};
 
 struct file

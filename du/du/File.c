@@ -12,16 +12,10 @@
 #include "error-handling.h"
 #include "trace.h"
 
-#ifdef UNICODE
-#define EXTENDED_LENGTH_PATH_PREFIX _T("\\\\?\\")
-#else
-#define EXTENDED_LENGTH_PATH_PREFIX ""
-#endif
-
 static TCHAR *prefixForExtendedLengthPath(const TCHAR *path);
 static TCHAR *queryForAbsolutePath(const TCHAR *path);
 static File  *allocateFile();
-static TCHAR *slashToBackslash(TCHAR *path);
+static TCHAR *slashToBackslash(const TCHAR *path);
 static TCHAR *skipPrefix(TCHAR *path);
 
 File *new_File(const TCHAR *name)
@@ -57,7 +51,7 @@ File *new_FileWithChild(const File *parent, const TCHAR *child)
 }
 
 /* Result should be freed. */
-static TCHAR *slashToBackslash(TCHAR *path)
+static TCHAR *slashToBackslash(const TCHAR *path)
 {
 	return replaceAll(_tcsdup(path), _TEXT('/'), _TEXT('\\'));	/* Make sure all separators are backslashes. */
 }

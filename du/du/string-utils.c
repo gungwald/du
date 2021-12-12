@@ -106,7 +106,7 @@ char *convertWideCharStringToUtf8(const wchar_t *wideCharString)
 	return utf8StringResult;
 }
 
-char **convertTcharStringArrayToUtf8(int argc, TCHAR *argv[])
+char **convertTcharStringArrayToUtf8(int argc, const TCHAR *argv[])
 {
 	char **utf8StringArray;
 	int i;
