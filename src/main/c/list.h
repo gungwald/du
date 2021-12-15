@@ -1,20 +1,25 @@
-#pragma once
+#ifndef LIST_H_0987890
+#define LIST_H_0987890
 
 #include <stdbool.h>
 #include <tchar.h>
 
-struct List
-{
-	void *data;
-	struct List *next;
-};
+typedef
+    struct ListNode
+    {
+        struct ListNode *next;
+        void *data;
+    } 
+    List;
 
-extern struct List *addListElemAtTail(List *l, const void *data);
-extern struct List *addListElemAtHead(List *l, const void *data);
-extern struct List *skipListElem(const List *l);
-extern void *getListHeadData(const List *l);
+extern List *appendListNode(List *l, const void *data);
+extern List *prependListNode(List *l, const void *data);
+extern List *skipListNode(const List *l);
+extern void *getListNodeData(const List *l);
 extern size_t getListSize(List *l);
 extern bool isListEmpty(List *l);
-extern void *removeListHead(List *l);
+extern void *removeListNode(List *l);
 extern void freeList(List *l);
+
+#endif
 

@@ -38,10 +38,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <windows.h>
-#include <tchar.h>
-#include "File.h"
-#include "string-utils.h"
-#include "error-handling.h"
+#include <wchar.h>
+#include "filename.h"
+#include "string.h"
+#include "error.h"
 #include "trace.h"
 #include "list.h"
 #include "args.h"
@@ -59,37 +59,37 @@
 #define MEBIBYTE 0x100000
 #define GIBIBYTE 0x40000000
 
-static void printFileSize(File *path, unsigned long size);
-static unsigned long calcDiskUsage(File *path, bool isTopLevel);
+static void printwchar_tSize(wchar_t *path, unsigned long size);
+static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
 
-TCHAR *programName;
+wchar_t *programName;
 
-int _tmain(int argc, TCHAR *argv[]) {
-	List *nonSwitchArguments;
-	File *argument;
+int wmain(int argc, wchar_t *argv[]) {
+	List *fileArgs;
+        List *node;
+	wchar_t *argument;
 
 	TRACE_ENTER(__func__, _T("argv[1]"), argv[1]);
 	programName = argv[0];
-	nonSwitchArguments = setSwitches(argc, argv);
-	if (list_getSize(nonSwitchArguments) > 0) {
-		while (list_hasMoreElements(nonSwitchArguments)) {
-			argument = new_File(list_getData(nonSwitchArguments));
+	fileArgs = setSwitches(argc, argv);
+        if (getListSize(fileArgs) > 0) {
+            for (node = fileArgs; ! isListEmpty(node); skipListElement(node)) {
+			argument = removeListHead(fileArgs);
 			calcDiskUsage(argument, true);
-			freeFile(argument);
-			list_advance(nonSwitchArguments);
+			free(argument);
 		}
 	}
 	else {
-		argument = new_File(DEFAULT_PATH);
+		argument = getAbsolutePath(DEFAULT_PATH);
 		calcDiskUsage(argument, true);
-		freeFile(argument);
+		free(argument);
 	}
 	list_free(nonSwitchArguments);
 	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
 	return EXIT_SUCCESS;
 }
 
-void printFileSize(File *f, unsigned long size) {
+void printFileSize(wchar_t *f, unsigned long size) {
 	double hrSize;
 	if (humanReadable) {
 		if (size >= GIBIBYTE) {
@@ -121,21 +121,21 @@ void printFileSize(File *f, unsigned long size) {
 	}
 }
 
-unsigned long calcDiskUsage(File *f, bool isTopLevel) {
+unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel) {
 	unsigned long size = 0;
 	List *entries;
 
 	TRACE_ENTER_CALLBACK(__func__, _T("path"), printPath, f);
 
-	if (isFile(f)) {
+	if (iswchar_t(f)) {
 		size = getLength(f);
-		if (displayRegularFilesAlso || isTopLevel) {
+		if (displayRegularwchar_tsAlso || isTopLevel) {
 			printFileSize(f, size);
 		}
 	}
 	else {
-		for (entries = listFiles(f); list_hasMoreElements(entries); list_advance(entries)) {
-			size += calcDiskUsage((File *) list_getData(entries), false);
+		for (entries = listwchar_ts(f); list_hasMoreElements(entries); list_advance(entries)) {
+			size += calcDiskUsage((wchar_t *) list_getData(entries), false);
 		}
 		list_free(entries);
 		if (!summarize || isTopLevel) {

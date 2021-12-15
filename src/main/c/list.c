@@ -1,33 +1,29 @@
 #include <malloc.h>
 #include "list.h"
 
-List *list_init()
+List *initList()
 {
-	struct ListControlBlock *list;
-
-	list = (struct ListControlBlock *) malloc(sizeof(struct ListControlBlock));
-	list->first = NULL;
-	list->current = NULL;
-	list->last = NULL;
-	list->size = 0;
-	return list;
+    return NULL;
 }
 
-void list_free(List *list)
+void freeList(List *l)
 {
-	list_reset(list);
-	while (! list_isEmpty(list)) {
-		list_deleteElement(list);
-	}
-	free(list);
+    void *data;
+
+    while (l != NULL) {
+        data = removeListNode(l);
+        free(data);
+    }
 }
 
-bool list_isEmpty(List *list)
+bool isListEmpty(List *list)
 {
-	return list->first == NULL;
+    return list == NULL;
 }
 
-void list_deleteElement(List *list)
+/* STOPPED HERE */
+
+void *removeListNode(List *l)
 {
 	struct ListNode *element;
 

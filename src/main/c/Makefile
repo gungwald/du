@@ -1,14 +1,14 @@
-CC=i686-w64-mingw32-gcc
+CC=gcc
 LDFLAGS=-municode
 CFLAGS=-DUNICODE -D_UNICODE -municode
 TARGET=du.exe
+OBJS=du.o string.o error.o filename.o list.o help.o args.o
+HEADERS=du.h string.h error.h filename.h list.h help.h args.h getopt.h
 
 all: $(TARGET)
 
-
-$(TARGET): du.o string-utils.o error-handling.o path.o list.o du.h string-utils.h error-handling.h version.h resource.h path.h trace.h list.h
-	$(CC) -o $(TARGET) $(LDFLAGS) *.o
-
+$(TARGET): $(OBJS) $(HEADERS)
+	$(CC) -o $(TARGET) $(LDFLAGS) $(OBJS)
 
 clean:
 	$(RM) *.o $(TARGET)
