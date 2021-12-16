@@ -1,7 +1,9 @@
 #include <stdlib.h>
+#include <stddef.h>
+#include <wchar.h>
 #include <windows.h>
 #include "args.h"
-#include "string-utils.h"
+#include "string.h"
 #include "help.h"
 
 #ifdef _MSC_FULL_VER
@@ -15,7 +17,7 @@ bool displayBytes = false;
 bool summarize = false;
 bool humanReadable = false;
 
-static TCHAR *programName;
+static wchar_t *programName;
 
 List *setSwitches(int argc, TCHAR *argv[]) 
 {

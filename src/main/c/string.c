@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include "strings.h"
-#include "errors.h"
+#include "string.h"
+#include "error.h"
 
 bool isGlob(const wchar_t *s)
 {
@@ -72,7 +72,7 @@ char *convertToUtf8(const wchar_t *wstr)
         /* Includes string terminator because of -1 argument. */
         WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,reqSize,NULL,NULL);
     } else {
-        wperror(L("Failed alloc memory for UTF-8 string"));
+        _wperror(L"Failed alloc memory for UTF-8 string");
         exit(EXIT_FAILURE);
     }
     return utf8;
@@ -86,7 +86,7 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
 	utf8StringArray = (char **) malloc(sizeof(char *) * argc);
 	for (i = 0; i < argc; i++) {
 #ifdef UNICODE
-			utf8StringArray[i] = convertWideCharStringToUtf8(argv[i]);
+			utf8StringArray[i] = convertToUtf8(argv[i]);
 #else
 			utf8StringArray[i] = strdup(argv[i]);
 #endif

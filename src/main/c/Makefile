@@ -1,4 +1,5 @@
-CC=gcc
+# i686-w64-mingw32-gcc is a name that is consistent across Linux and Windows.
+CC=i686-w64-mingw32-gcc
 LDFLAGS=-municode
 CFLAGS=-DUNICODE -D_UNICODE -municode
 TARGET=du.exe

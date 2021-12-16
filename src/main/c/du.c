@@ -59,22 +59,22 @@
 #define MEBIBYTE 0x100000
 #define GIBIBYTE 0x40000000
 
-static void printwchar_tSize(wchar_t *path, unsigned long size);
+static void printFileSize(wchar_t *path, unsigned long size);
 static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
 
-wchar_t *programName;
+const wchar_t *programName;
 
-int wmain(int argc, wchar_t *argv[]) {
+int wmain(int argc, const wchar_t *argv[]) {
 	List *fileArgs;
-        List *node;
+	List *node;
 	wchar_t *argument;
 
 	TRACE_ENTER(__func__, _T("argv[1]"), argv[1]);
 	programName = argv[0];
 	fileArgs = setSwitches(argc, argv);
-        if (getListSize(fileArgs) > 0) {
-            for (node = fileArgs; ! isListEmpty(node); skipListElement(node)) {
-			argument = removeListHead(fileArgs);
+	if (getListSize(fileArgs) > 0) {
+		for (node = fileArgs; !isListEmpty(node); skipListNode(node)) {
+			argument = removeListNode(fileArgs);
 			calcDiskUsage(argument, true);
 			free(argument);
 		}
@@ -84,28 +84,28 @@ int wmain(int argc, wchar_t *argv[]) {
 		calcDiskUsage(argument, true);
 		free(argument);
 	}
-	list_free(nonSwitchArguments);
+	freeList(fileArgs);
 	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
 	return EXIT_SUCCESS;
 }
 
-void printFileSize(wchar_t *f, unsigned long size) {
+void printFileSize(wchar_t *path, unsigned long size) {
 	double hrSize;
 	if (humanReadable) {
 		if (size >= GIBIBYTE) {
 			hrSize = ((double) size) / ((double) GIBIBYTE);
-			_tprintf(_T("%2.1fG\t%s\n"), hrSize, getPath(f));
+			_tprintf(_T("%2.1fG\t%s\n"), hrSize, getSimpleName(path));
 		}
 		else if (size >= MEBIBYTE) {
 			hrSize = ((double) size) / ((double) MEBIBYTE);
-			_tprintf(_T("%2.1fM\t%s\n"), hrSize, getPath(f));
+			_tprintf(_T("%2.1fM\t%s\n"), hrSize, getSimpleName(path));
 		}
 		else if (size >= KIBIBYTE) {
 			hrSize = ((double) size) / ((double) KIBIBYTE);
-			_tprintf(_T("%2.1fK\t%s\n"), hrSize, getPath(f));
+			_tprintf(_T("%2.1fK\t%s\n"), hrSize, getSimpleName(path));
 		}
 		else {
-			_tprintf(_T("%-2lu\t%s\n"), size, getPath(f));
+			_tprintf(_T("%-2lu\t%s\n"), size, getSimpleName(path));
 		}
 	}
 	else {
@@ -117,7 +117,7 @@ void printFileSize(wchar_t *f, unsigned long size) {
 				}
 			}
 		}
-		_tprintf(_T("%-7lu %s\n"), size, getPath(f));
+		_tprintf(_T("%-7lu %s\n"), size, getSimpleName(path));
 	}
 }
 
@@ -127,21 +127,20 @@ unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel) {
 
 	TRACE_ENTER_CALLBACK(__func__, _T("path"), printPath, f);
 
-	if (iswchar_t(f)) {
-		size = getLength(f);
-		if (displayRegularwchar_tsAlso || isTopLevel) {
+	if (isFile(f)) {
+		size = getFileSize(f);
+		if (displayRegularFilesAlso || isTopLevel) {
 			printFileSize(f, size);
 		}
 	}
 	else {
-		for (entries = listwchar_ts(f); list_hasMoreElements(entries); list_advance(entries)) {
-			size += calcDiskUsage((wchar_t *) list_getData(entries), false);
+		for (entries = listDirContents(f); !isListEmpty(entries); skipListNode(entries)) {
+			size += calcDiskUsage((wchar_t*) getListNodeData(entries), false);
 		}
-		list_free(entries);
+		freeList(entries);
 		if (!summarize || isTopLevel) {
 			printFileSize(f, size);
 		}
-	}
-	TRACE_RETURN_ULONG(__func__, size);
+	} TRACE_RETURN_ULONG(__func__, size);
 	return size;
 }

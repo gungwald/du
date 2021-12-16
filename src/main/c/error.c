@@ -2,7 +2,7 @@
 #include <string.h>
 #include <lmerr.h>
 #include "du.h"
-#include "error-handling.h"
+#include "error.h"
 
 #define ERROR_TEXT_CAPACITY 128
 
