@@ -121,9 +121,10 @@ void printFileSize(wchar_t *path, unsigned long size) {
 	}
 }
 
-unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel) {
-	unsigned long size = 0;
-	List *entries;
+unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel)
+{
+    unsigned long size = 0;
+    List *entries;
 
 	TRACE_ENTER_CALLBACK(__func__, _T("path"), printPath, f);
 

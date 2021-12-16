@@ -30,8 +30,7 @@ int _tmain(int argc, TCHAR *argv[])
 
     if (argc > 1) {
         targetDir = new_File(argv[1]);
-    }
-    else {
+    } else {
         _ftprintf(stderr, _TEXT("Missing command line parameter for [TARGETDIR]"));
         exit(EXIT_FAILURE);
     }
@@ -42,14 +41,13 @@ int _tmain(int argc, TCHAR *argv[])
         exit(EXIT_FAILURE);
     }
 
-	path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
+    path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
     if (_tcsstr(path, getAbsolutePath(targetDir)) == NULL) {
         /* Our installDir is not in the Path yet. */
         _tprintf(_T("Appending %s to user Path in the registry.\n"), getAbsolutePath(targetDir));
         if (path[_tcslen(path) - 1] == ';') {
             updatedPath = concat(path, getAbsolutePath(targetDir));
-        }
-        else {
+        } else {
             updatedPath = concat3(path, _T(";"), getAbsolutePath(targetDir));
         }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
@@ -58,11 +56,10 @@ int _tmain(int argc, TCHAR *argv[])
             writeLastError(status, _T("Failed to set registry value"), PATH_REG_VALUE);
         }
         free(updatedPath);
-	}
-    else {
+    } else {
         _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), getAbsolutePath(targetDir));
     }
-	free(path);
+    free(path);
     return EXIT_SUCCESS;
 }
 
@@ -89,8 +86,7 @@ TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)
             writeLastError(status, _T("Failed to get registry value"), value);
             exit(EXIT_FAILURE);
         }
-    }
-    else {
+    } else {
         writeLastError(status, _T("Failed to get required size of buffer for"), _T("Path"));
         exit(EXIT_FAILURE);
     }
@@ -106,8 +102,7 @@ bool fileExists(TCHAR *path)
     findHandle = FindFirstFile(path, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
         fileExists = false;
-    }
-    else {
+    } else {
         fileExists = true;
         FindClose(findHandle);
     }

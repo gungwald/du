@@ -25,8 +25,8 @@ wchar_t *concat(const wchar_t *left, const wchar_t *right)
     return result;
 }
 
-wchar_t *concat3(const wchar_t *first, 
-                 const wchar_t *second, 
+wchar_t *concat3(const wchar_t *first,
+                 const wchar_t *second,
                  const wchar_t *third)
 {
     size_t reqSize;
@@ -66,7 +66,7 @@ char *convertToUtf8(const wchar_t *wstr)
     char *utf8;
 
     /* Will include string terminator because of -1 argument. */
-    reqSize=WideCharToMultiByte(CP_UTF8,0,wstr,-1,NULL,0,NULL,NULL);
+    reqSize = WideCharToMultiByte(CP_UTF8,0,wstr,-1,NULL,0,NULL,NULL);
     utf8 = (char *) malloc(reqSize);
     if (utf8) {
         /* Includes string terminator because of -1 argument. */
@@ -80,27 +80,31 @@ char *convertToUtf8(const wchar_t *wstr)
 
 char **convertAllToUtf8(int argc, const TCHAR *argv[])
 {
-	char **utf8StringArray;
-	int i;
+    char **utf8StringArray;
+    int i;
 
-	utf8StringArray = (char **) malloc(sizeof(char *) * argc);
-	for (i = 0; i < argc; i++) {
+    utf8StringArray = (char **) malloc(sizeof(char *) * argc);
+    for (i = 0; i < argc; i++) {
 #ifdef UNICODE
+<<<<<<< HEAD
 			utf8StringArray[i] = convertToUtf8(argv[i]);
+=======
+        utf8StringArray[i] = convertToUtf8(argv[i]);
+>>>>>>> f8fe54b96a038d5fac867e09a91c0fde1fa55cd7
 #else
-			utf8StringArray[i] = strdup(argv[i]);
+        utf8StringArray[i] = strdup(argv[i]);
 #endif
-	}
-	return utf8StringArray;
+    }
+    return utf8StringArray;
 }
 
 void freeStringArray(int elementCount, char *array[])
 {
-	int i;
+    int i;
 
-	for (i = 0; i < elementCount; i++) {
-		free(array[i]);
-	}
-	free(array);
+    for (i = 0; i < elementCount; i++) {
+        free(array[i]);
+    }
+    free(array);
 }
 
