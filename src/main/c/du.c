@@ -59,89 +59,83 @@
 #define MEBIBYTE 0x100000
 #define GIBIBYTE 0x40000000
 
-static void printwchar_tSize(wchar_t *path, unsigned long size);
+static void printFileSize(wchar_t *path, unsigned long size);
 static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
 
 wchar_t *programName;
 
-int wmain(int argc, wchar_t *argv[]) {
-	List *fileArgs;
-        List *node;
-	wchar_t *argument;
+int wmain(int argc, wchar_t *argv[])
+{
+    List *fileArgs;
+    List *node;
+    wchar_t *argument;
 
-	TRACE_ENTER(__func__, _T("argv[1]"), argv[1]);
-	programName = argv[0];
-	fileArgs = setSwitches(argc, argv);
-        if (getListSize(fileArgs) > 0) {
-            for (node = fileArgs; ! isListEmpty(node); skipListElement(node)) {
-			argument = removeListHead(fileArgs);
-			calcDiskUsage(argument, true);
-			free(argument);
-		}
-	}
-	else {
-		argument = getAbsolutePath(DEFAULT_PATH);
-		calcDiskUsage(argument, true);
-		free(argument);
-	}
-	list_free(nonSwitchArguments);
-	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
-	return EXIT_SUCCESS;
+    programName = argv[0];
+    fileArgs = setSwitches(argc, argv);
+    if (getListSize(fileArgs) > 0) {
+        for (node = fileArgs; ! isListEmpty(node); skipListNode(node)) {
+            argument = removeListNode(fileArgs);
+            calcDiskUsage(argument, true);
+            free(argument);
+        }
+    } else {
+        argument = getAbsolutePath(DEFAULT_PATH);
+        calcDiskUsage(argument, true);
+        free(argument);
+    }
+    freeList(fileArgs);
+    return EXIT_SUCCESS;
 }
 
-void printFileSize(wchar_t *f, unsigned long size) {
-	double hrSize;
-	if (humanReadable) {
-		if (size >= GIBIBYTE) {
-			hrSize = ((double) size) / ((double) GIBIBYTE);
-			_tprintf(_T("%2.1fG\t%s\n"), hrSize, getPath(f));
-		}
-		else if (size >= MEBIBYTE) {
-			hrSize = ((double) size) / ((double) MEBIBYTE);
-			_tprintf(_T("%2.1fM\t%s\n"), hrSize, getPath(f));
-		}
-		else if (size >= KIBIBYTE) {
-			hrSize = ((double) size) / ((double) KIBIBYTE);
-			_tprintf(_T("%2.1fK\t%s\n"), hrSize, getPath(f));
-		}
-		else {
-			_tprintf(_T("%-2lu\t%s\n"), size, getPath(f));
-		}
-	}
-	else {
-		if (!displayBytes) {
-			if (size > 0) {
-				size = size / ((unsigned long) (1024.0 + 0.5)); /* Convert to KB and round */
-				if (size == 0) {
-					size = 1; /* Don't allow zero to display if there are bytes in the file */
-				}
-			}
-		}
-		_tprintf(_T("%-7lu %s\n"), size, getPath(f));
-	}
+void printFileSize(wchar_t *f, unsigned long size)
+{
+    double hrSize;
+    if (humanReadable) {
+        if (size >= GIBIBYTE) {
+            hrSize = ((double) size) / ((double) GIBIBYTE);
+            _tprintf(_T("%2.1fG\t%s\n"), hrSize, getSimpleName(f));
+        } else if (size >= MEBIBYTE) {
+            hrSize = ((double) size) / ((double) MEBIBYTE);
+            _tprintf(_T("%2.1fM\t%s\n"), hrSize, getSimpleName(f));
+        } else if (size >= KIBIBYTE) {
+            hrSize = ((double) size) / ((double) KIBIBYTE);
+            _tprintf(_T("%2.1fK\t%s\n"), hrSize, getSimpleName(f));
+        } else {
+            _tprintf(_T("%-2lu\t%s\n"), size, getSimpleName(f));
+        }
+    } else {
+        if (!displayBytes) {
+            if (size > 0) {
+                /* Convert to KB and round */
+                size = size / ((unsigned long) (1024.0 + 0.5));
+                if (size == 0) {
+                    /* Don't allow zero to display if there are bytes in the file */
+                    size = 1;
+                }
+            }
+        }
+        _tprintf(_T("%-7lu %s\n"), size, getSimpleName(f));
+    }
 }
 
-unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel) {
-	unsigned long size = 0;
-	List *entries;
+unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel)
+{
+    unsigned long size = 0;
+    List *entries;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), printPath, f);
-
-	if (iswchar_t(f)) {
-		size = getLength(f);
-		if (displayRegularwchar_tsAlso || isTopLevel) {
-			printFileSize(f, size);
-		}
-	}
-	else {
-		for (entries = listwchar_ts(f); list_hasMoreElements(entries); list_advance(entries)) {
-			size += calcDiskUsage((wchar_t *) list_getData(entries), false);
-		}
-		list_free(entries);
-		if (!summarize || isTopLevel) {
-			printFileSize(f, size);
-		}
-	}
-	TRACE_RETURN_ULONG(__func__, size);
-	return size;
+    if (isFile(f)) {
+        size = getFileSize(f);
+        if (displayRegularFilesAlso || isTopLevel) {
+            printFileSize(f, size);
+        }
+    } else {
+        for (entries = listDirContents(f); !isListEmpty(entries); skipListNode(entries)) {
+            size += calcDiskUsage((wchar_t *) getListNodeData(entries), false);
+        }
+        freeList(entries);
+        if (!summarize || isTopLevel) {
+            printFileSize(f, size);
+        }
+    }
+    return size;
 }
