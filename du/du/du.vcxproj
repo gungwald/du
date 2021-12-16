@@ -133,6 +133,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsC</CompileAs>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -333,18 +334,23 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="args.c" />
     <ClCompile Include="du.c" />
     <ClCompile Include="error-handling.c" />
+    <ClCompile Include="help.c" />
     <ClCompile Include="list.c" />
-    <ClCompile Include="path.c" />
+    <ClCompile Include="File.c" />
     <ClCompile Include="string-utils.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="args.h" />
     <ClInclude Include="build-number.h" />
     <ClInclude Include="du.h" />
     <ClInclude Include="error-handling.h" />
+    <ClInclude Include="getopt.h" />
+    <ClInclude Include="help.h" />
     <ClInclude Include="list.h" />
-    <ClInclude Include="path.h" />
+    <ClInclude Include="File.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="string-utils.h" />
     <ClInclude Include="trace.h" />

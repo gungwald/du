@@ -3,7 +3,10 @@ LDFLAGS=-municode
 CFLAGS=-DUNICODE -D_UNICODE -municode
 TARGET=du.exe
 
-$(TARGET): du.o string-utils.o error-handling.o path.o du.h string-utils.h error-handling.h version.h resource.h path.h trace.h
+all: $(TARGET)
+
+
+$(TARGET): du.o string-utils.o error-handling.o path.o list.o du.h string-utils.h error-handling.h version.h resource.h path.h trace.h list.h
 	$(CC) -o $(TARGET) $(LDFLAGS) *.o
 
 

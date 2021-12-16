@@ -15,34 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\du\error-handling.c">
+    <ClCompile Include="GetFullPathName-tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\du\string-utils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="update-path.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\du\File.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\du\list.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\du\error-handling.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\du\string-utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\du\File.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\du\list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
