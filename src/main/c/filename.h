@@ -17,7 +17,7 @@
 #define EXTENDED_LENGTH_PATH_PREFIX L"\\\\?\\"
 
 extern wchar_t *getAbsolutePath(const wchar_t *path);
-extern wchar_t *getSimpleName(const wchar_t *path);
+extern const wchar_t *getSimpleName(const wchar_t *path);
 extern wchar_t *getParentPath(const wchar_t *path);
 extern unsigned long getFileSize(wchar_t *path);
 extern List *listDirContents(const wchar_t *path);

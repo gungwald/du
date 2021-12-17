@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include "help.h"
-#include "build-number.h"
+#include "buildnumber.h"
 #include "version.h"
 
 void usage()

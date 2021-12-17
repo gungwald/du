@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
 #include <windows.h>
 #include "filename.h"
 #include "string.h"
 #include "error.h"
 #include "trace.h"
+
+enum FileType {FILETYPE_DIRECTORY, FILETYPE_FILE, FILETYPE_GLOB};
 
 extern wchar_t *makeExtendedLengthPath(const wchar_t *path);
 extern wchar_t *makeNormalPath(const wchar_t *path);
@@ -61,29 +64,27 @@ wchar_t *getParentPath(const wchar_t *path)
 {
     wchar_t *parent;
     wchar_t *lastBackslashPointer;
-    const wchar_t *absPath;
+    wchar_t *absPath;
     size_t parentSize;
 
     if (isAbsolutePath(path)) {
-        absPath = path;
+        absPath = wcsdup(path);
     } else {
         absPath = getAbsolutePath(path);
     }
     lastBackslashPointer = wcsrchr(absPath, L'\\');
     parentSize = lastBackslashPointer - absPath + 1;
     parent = (wchar_t *) malloc(parentSize * sizeof(wchar_t));
-    strncpy(parent, parentSize, absPath);
-    if (absPath != path) {
-        free(absPath);
-    }
+    wcsncpy(parent, absPath, parentSize);
+    free(absPath);
     return parent;
 }
 
 /* Returns pointer which should not be freed. */
-wchar_t *getSimpleName(const wchar_t *path)
+const wchar_t *getSimpleName(const wchar_t *path)
 {
-    wchar_t *lastBackslash;
-    wchar_t *simpleName;
+    const wchar_t *lastBackslash;
+    const wchar_t *simpleName;
 
     lastBackslash = wcsrchr(path, L'\\');
     if (lastBackslash == NULL)
@@ -142,21 +143,19 @@ List *listFiles(const wchar_t *path)
 
     files = initList();
     if (isGlob(path)) {
-        search = path;
+        search = wcsdup(path);
     } else {
         search = concat3(path, DIR_SEPARATOR, L"*");
-
     }
     findHandle = FindFirstFile(search, &fileProperties);
-    if (fileHandle == INVALID_HANDLE_VALUE) {
+    if (findHandle == INVALID_HANDLE_VALUE) {
         writeLastError(GetLastError(), L"Failed to get handle for pattern", search);
     } else {
         moreDirectoryEntries = true;
         while (moreDirectoryEntries) {
             entry = fileProperties.cFileName;
             if (wcscmp(entry, L".") != 0 && wcscmp(entry, L"..") != 0) {
-                    appendListNode(files, entry);
-                }
+            	appendListNode(files, entry);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
                 if ((lastError = GetLastError()) == ERROR_NO_MORE_FILES) {
@@ -168,14 +167,14 @@ List *listFiles(const wchar_t *path)
         }
         FindClose(findHandle); /* Only close it if it got opened successfully */
     }
-    free(search);
+	free(search);
     return files;
 }
 
-enum FileType getFileType(wchar_t *path)
+enum FileType getFileType(const wchar_t *path)
 {
     DWORD fileAttributes;
-    enum FileType = type;
+    enum FileType type;
 
     if (isGlob(path)) {
         type = FILETYPE_GLOB;
@@ -192,18 +191,17 @@ enum FileType getFileType(wchar_t *path)
     return type;
 }
 
-bool isFile(wchar_t *path)
+bool isFile(const wchar_t *path)
 {
     return getFileType(path) == FILETYPE_FILE;
 }
 
-bool isDirectory(File *f)
+bool isDirectory(const wchar_t *path)
 {
     return getFileType(path) == FILETYPE_DIRECTORY;
 }
 
-bool isGlobPattern(File *f)
+bool isGlobPattern(const wchar_t *path)
 {
     return getFileType(path) == FILETYPE_GLOB;
 }
-

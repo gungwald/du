@@ -86,11 +86,7 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
     utf8StringArray = (char **) malloc(sizeof(char *) * argc);
     for (i = 0; i < argc; i++) {
 #ifdef UNICODE
-<<<<<<< HEAD
-			utf8StringArray[i] = convertToUtf8(argv[i]);
-=======
         utf8StringArray[i] = convertToUtf8(argv[i]);
->>>>>>> f8fe54b96a038d5fac867e09a91c0fde1fa55cd7
 #else
         utf8StringArray[i] = strdup(argv[i]);
 #endif
