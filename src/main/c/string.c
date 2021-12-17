@@ -94,7 +94,7 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
     return utf8StringArray;
 }
 
-void freeStringArray(int elementCount, char *array[])
+void freeStrings(int elementCount, char *array[])
 {
     int i;
 

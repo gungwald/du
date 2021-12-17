@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <wctype.h>		/* iswalpha */
 #include <windows.h>
 #include "filename.h"
 #include "string.h"
@@ -155,7 +156,7 @@ List *listFiles(const wchar_t *path)
         while (moreDirectoryEntries) {
             entry = fileProperties.cFileName;
             if (wcscmp(entry, L".") != 0 && wcscmp(entry, L"..") != 0) {
-            	appendListNode(files, entry);
+            	appendListItem(files, entry);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
                 if ((lastError = GetLastError()) == ERROR_NO_MORE_FILES) {
@@ -204,4 +205,18 @@ bool isDirectory(const wchar_t *path)
 bool isGlobPattern(const wchar_t *path)
 {
     return getFileType(path) == FILETYPE_GLOB;
+}
+
+bool isAbsolutePath(const wchar_t *path)
+{
+	bool isAbsolutePath;
+	size_t len;
+	len = wcslen(path);
+	if ((len >= 3 && path[1] == L':' && path[2] == L'\\' && iswalpha(path[0]))
+			|| (len >= 4 && path[2] == L':' && path[3] == L'\\' && iswalpha(path[0]) && iswalpha(path[1]))
+			|| (len >= 1 && path[0] == L'\\'))
+		isAbsolutePath = true;
+	else
+		isAbsolutePath = false;
+	return isAbsolutePath;
 }

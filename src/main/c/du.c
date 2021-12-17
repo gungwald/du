@@ -73,8 +73,8 @@ int wmain(int argc, const wchar_t *argv[]) {
 	programName = argv[0];
 	fileArgs = setSwitches(argc, argv);
 	if (getListSize(fileArgs) > 0) {
-		for (node = fileArgs; !isListEmpty(node); skipListNode(node)) {
-			argument = removeListNode(fileArgs);
+		for (node = fileArgs; !isListEmpty(node); skipListItem(node)) {
+			argument = removeListItem(&fileArgs);
 			calcDiskUsage(argument, true);
 			free(argument);
 		}
@@ -121,27 +121,27 @@ void printFileSize(wchar_t *path, unsigned long size) {
 	}
 }
 
-unsigned long calcDiskUsage(wchar_t *f, bool isTopLevel)
+unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel)
 {
     unsigned long size = 0;
     List *entries;
+    List *entry;
 
-	TRACE_ENTER_CALLBACK(__func__, _T("path"), printPath, f);
-
-	if (isFile(f)) {
-		size = getFileSize(f);
+	if (isFile(path)) {
+		size = getFileSize(path);
 		if (displayRegularFilesAlso || isTopLevel) {
-			printFileSize(f, size);
+			printFileSize(path, size);
 		}
 	}
 	else {
-		for (entries = listDirContents(f); !isListEmpty(entries); skipListNode(entries)) {
-			size += calcDiskUsage((wchar_t*) getListNodeData(entries), false);
+		entries = listFiles(path);
+		for (entry = entries; !isListEmpty(entry); skipListItem(entry)) {
+			size += calcDiskUsage((wchar_t*) getListItem(entry), false);
 		}
 		freeList(entries);
 		if (!summarize || isTopLevel) {
-			printFileSize(f, size);
+			printFileSize(path, size);
 		}
-	} TRACE_RETURN_ULONG(__func__, size);
+	}
 	return size;
 }

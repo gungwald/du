@@ -17,9 +17,9 @@ bool displayBytes = false;
 bool summarize = false;
 bool humanReadable = false;
 
-static wchar_t *programName;
+static const wchar_t *programName;
 
-List *setSwitches(int argc, TCHAR *argv[])
+List *setSwitches(int argc, const wchar_t *argv[])
 {
     int optionChar;
     List *remainingArguments;
@@ -38,7 +38,7 @@ List *setSwitches(int argc, TCHAR *argv[])
     /* optind - system sets to index of next argument in argv. */
 
     programName = argv[0];
-    arguments = convertTcharStringArrayToUtf8(argc, argv);
+    arguments = convertAllToUtf8(argc, argv);
 
     while ((optionChar = getopt_long(argc, arguments, "?vabsh", longOptions, &optionIndex)) != END_OF_OPTIONS) {
         switch (optionChar) {
@@ -68,16 +68,16 @@ List *setSwitches(int argc, TCHAR *argv[])
         }
     }
 
-    freeStringArray(argc, arguments);
+    freeStrings(argc, arguments);
 
     if (displayRegularFilesAlso && summarize) {
         _ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
         exit(EXIT_FAILURE);
     }
 
-    remainingArguments = list_init();
+    remainingArguments = initList();
     while (optind < argc) {
-        list_append(remainingArguments, argv[optind++]);
+        appendListItem(remainingArguments, argv[optind++]);
     }
     return remainingArguments;
 }

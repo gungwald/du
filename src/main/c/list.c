@@ -11,7 +11,7 @@ void freeList(List *l)
     void *data;
 
     while (l != NULL) {
-        data = removeListNode(&l);
+        data = removeListItem(&l);
         free(data);
     }
 }
@@ -21,7 +21,7 @@ bool isListEmpty(List *list)
     return list == NULL;
 }
 
-void *removeListNode(List **l)
+void *removeListItem(List **l)
 {
     struct ListNode *detachedHead;
     void *data;
@@ -33,7 +33,7 @@ void *removeListNode(List **l)
     return data;
 }
 
-List *appendListNode(List *l, const void *data)
+List *appendListItem(List *l, const void *data)
 {
     struct ListNode *node;
     struct ListNode *toPutAtEnd;
@@ -49,12 +49,12 @@ List *appendListNode(List *l, const void *data)
     return l;
 }
 
-const void *getListNodeData(const List *l)
+const void *getListItem(const List *l)
 {
     return l->data;
 }
 
-List *skipListNode(const List *l)
+List *skipListItem(const List *l)
 {
 	return l->next;
 }
