@@ -158,7 +158,7 @@ List *listFiles(const wchar_t *path)
             entry = fileProperties.cFileName;
             if (wcscmp(entry, L".") != 0 && wcscmp(entry, L"..") != 0) {
             	entryPath = buildFileName(path, entry);
-            	appendListItem(files, entryPath);
+            	appendListItem(&files, entryPath);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
                 if ((lastError = GetLastError()) == ERROR_NO_MORE_FILES) {

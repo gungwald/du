@@ -2,18 +2,20 @@
 #define LIST_H_0987890
 
 #include <stdbool.h>	/* bool */
-#include <stddef.h>		/* size_t */
+#include <stddef.h>	/* size_t */
+
+struct ListNode
+{
+    struct ListNode *next;
+    void *data;
+};
 
 typedef
-    struct ListNode
-    {
-        struct ListNode *next;
-        void *data;
-    } 
+    struct ListNode /* as */
     List;
 
 extern List *initList();
-extern List *appendListItem(List *l, void *data);
+extern List *appendListItem(List **l, void *data);
 extern List *skipListItem(const List *l);
 extern const void *getListItem(const List *l);
 extern size_t getListSize(const List *l);

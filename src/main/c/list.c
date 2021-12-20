@@ -14,16 +14,14 @@ bool isListEmpty(const List *list)
 
 void *removeListItem(List **l)
 {
-    struct ListNode *detachedHead;
     void *data;
 
-    detachedHead = *l;
     data = (*l)->data;
     *l = (*l)->next;
     return data;
 }
 
-List *appendListItem(List *l, void *data)
+List *appendListItem(List **l, void *data)
 {
     struct ListNode *node;
     struct ListNode *toPutAtEnd;
@@ -31,12 +29,17 @@ List *appendListItem(List *l, void *data)
     toPutAtEnd = (struct ListNode *) GC_MALLOC(sizeof(struct ListNode));
     toPutAtEnd->data = data;
     toPutAtEnd->next = NULL;
-    node = l;
-    while (node != NULL) {
-    	node = node->next;
+
+    if (*l == NULL) {
+    	*l = toPutAtEnd;
+    } else {
+		node = *l;
+		while (node->next != NULL) {
+			node = node->next;
+		}
+		node->next = toPutAtEnd;
     }
-    node->next = toPutAtEnd;
-    return l;
+    return *l;
 }
 
 const void *getListItem(const List *l)

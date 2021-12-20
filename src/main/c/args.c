@@ -80,7 +80,7 @@ List *setSwitches(int argc, const wchar_t *argv[])
 
     remainingArguments = initList();
     while (optind < argc) {
-        appendListItem(remainingArguments, wcsdup(argv[optind++]));
+        appendListItem(&remainingArguments, wcsdup(argv[optind++]));
     }
     return remainingArguments;
 }

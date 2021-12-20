@@ -20,9 +20,6 @@
  *
  ***************************************************************************/
 
-/* TODO - Fix argument handling */
-/* TODO - Implement human readable option */
-
 /*
  * NOTES:
  * <ol>
@@ -66,78 +63,72 @@ static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
 const wchar_t *programName;
 
 int wmain(int argc, const wchar_t *argv[]) {
-	List *fileArgs;
-	List *node;
-	wchar_t *argument;
+    List *fileArgs;
+    List *node;
+    wchar_t *argument;
 
-	GC_INIT();
-	programName = argv[0];
-	fileArgs = setSwitches(argc, argv);
-	if (getListSize(fileArgs) > 0) {
-		for (node = fileArgs; !isListEmpty(node); skipListItem(node)) {
-			argument = removeListItem(&fileArgs);
-			calcDiskUsage(argument, true);
-		}
-	}
-	else {
-		argument = getAbsolutePath(DEFAULT_PATH);
-		calcDiskUsage(argument, true);
-	}
-	return EXIT_SUCCESS;
+    GC_INIT();
+    programName = argv[0];
+    fileArgs = setSwitches(argc, argv);
+    if (getListSize(fileArgs) > 0) {
+        for (node = fileArgs; !isListEmpty(node); node = skipListItem(node)) {
+            argument = removeListItem(&fileArgs);
+            calcDiskUsage(argument, true);
+        }
+    } else {
+        argument = getAbsolutePath(DEFAULT_PATH);
+        calcDiskUsage(argument, true);
+    }
+    return EXIT_SUCCESS;
 }
 
 void printFileSize(wchar_t *path, unsigned long size) {
-	double hrSize;
-	if (humanReadable) {
-		if (size >= GIBIBYTE) {
-			hrSize = ((double) size) / ((double) GIBIBYTE);
-			_tprintf(_T("%2.1fG\t%s\n"), hrSize, getSimpleName(path));
-		}
-		else if (size >= MEBIBYTE) {
-			hrSize = ((double) size) / ((double) MEBIBYTE);
-			_tprintf(_T("%2.1fM\t%s\n"), hrSize, getSimpleName(path));
-		}
-		else if (size >= KIBIBYTE) {
-			hrSize = ((double) size) / ((double) KIBIBYTE);
-			_tprintf(_T("%2.1fK\t%s\n"), hrSize, getSimpleName(path));
-		}
-		else {
-			_tprintf(_T("%-2lu\t%s\n"), size, getSimpleName(path));
-		}
-	}
-	else {
-		if (!displayBytes) {
-			if (size > 0) {
-				size = size / ((unsigned long) (1024.0 + 0.5)); /* Convert to KB and round */
-				if (size == 0) {
-					size = 1; /* Don't allow zero to display if there are bytes in the file */
-				}
-			}
-		}
-		_tprintf(_T("%-7lu %s\n"), size, getSimpleName(path));
-	}
+    double hrSize;
+    if (humanReadable) {
+        if (size >= GIBIBYTE) {
+            hrSize = ((double) size) / ((double) GIBIBYTE);
+            _tprintf(_T("%2.1fG\t%ls\n"), hrSize, path);
+        } else if (size >= MEBIBYTE) {
+            hrSize = ((double) size) / ((double) MEBIBYTE);
+            _tprintf(_T("%2.1fM\t%ls\n"), hrSize, path);
+        } else if (size >= KIBIBYTE) {
+            hrSize = ((double) size) / ((double) KIBIBYTE);
+            _tprintf(_T("%2.1fK\t%ls\n"), hrSize, path);
+        } else {
+            _tprintf(_T("%-2lu\t%ls\n"), size, path);
+        }
+    } else {
+        if (!displayBytes) {
+            if (size > 0) {
+                size = size / ((unsigned long) (1024.0 + 0.5)); /* Convert to KB and round */
+                if (size == 0) {
+                    size = 1; /* Don't allow zero to display if there are bytes in the file */
+                }
+            }
+        }
+        wprintf(L"%-7lu %ls\n", size, path);
+    }
+    fflush(stdout);
 }
 
-unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel)
-{
+unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel) {
     unsigned long size = 0;
     List *entries;
     List *entry;
 
-	if (isFile(path)) {
-		size = getFileSize(path);
-		if (displayRegularFilesAlso || isTopLevel) {
-			printFileSize(path, size);
-		}
-	}
-	else {
-		entries = listFiles(path);
-		for (entry = entries; !isListEmpty(entry); skipListItem(entry)) {
-			size += calcDiskUsage((wchar_t*) getListItem(entry), false);
-		}
-		if (!summarize || isTopLevel) {
-			printFileSize(path, size);
-		}
-	}
-	return size;
+    if (isFile(path)) {
+        size = getFileSize(path);
+        if (displayRegularFilesAlso || isTopLevel) {
+            printFileSize(path, size);
+        }
+    } else {
+        entries = listFiles(path);
+        for (entry = entries; !isListEmpty(entry); entry = skipListItem(entry)) {
+            size += calcDiskUsage((wchar_t*) getListItem(entry), false);
+        }
+        if (!summarize || isTopLevel) {
+            printFileSize(path, size);
+        }
+    }
+    return size;
 }
