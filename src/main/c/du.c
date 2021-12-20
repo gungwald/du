@@ -39,6 +39,7 @@
 #include <stdbool.h>
 #include <windows.h>
 #include <wchar.h>
+#include <gc.h>
 #include "filename.h"
 #include "string.h"
 #include "error.h"
@@ -69,23 +70,19 @@ int wmain(int argc, const wchar_t *argv[]) {
 	List *node;
 	wchar_t *argument;
 
-	TRACE_ENTER(__func__, _T("argv[1]"), argv[1]);
+	GC_INIT();
 	programName = argv[0];
 	fileArgs = setSwitches(argc, argv);
 	if (getListSize(fileArgs) > 0) {
 		for (node = fileArgs; !isListEmpty(node); skipListItem(node)) {
 			argument = removeListItem(&fileArgs);
 			calcDiskUsage(argument, true);
-			free(argument);
 		}
 	}
 	else {
 		argument = getAbsolutePath(DEFAULT_PATH);
 		calcDiskUsage(argument, true);
-		free(argument);
 	}
-	freeList(fileArgs);
-	TRACE_RETURN_INT(__func__, EXIT_SUCCESS);
 	return EXIT_SUCCESS;
 }
 
@@ -138,7 +135,6 @@ unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel)
 		for (entry = entries; !isListEmpty(entry); skipListItem(entry)) {
 			size += calcDiskUsage((wchar_t*) getListItem(entry), false);
 		}
-		freeList(entries);
 		if (!summarize || isTopLevel) {
 			printFileSize(path, size);
 		}

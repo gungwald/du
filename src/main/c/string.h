@@ -10,7 +10,6 @@ extern wchar_t *concat3(const wchar_t*s,const wchar_t*t,const wchar_t*u);
 extern wchar_t *replaceAll(wchar_t *in, wchar_t from, wchar_t to);
 extern char *convertToUtf8(const wchar_t *s);
 extern char **convertAllToUtf8(int count, const wchar_t *strs[]);
-extern void freeStrings(int count, char *strs[]);
 extern bool startsWtih(const wchar_t *s, const wchar_t *prefix);
 extern bool endsWith(const wchar_t *s, const wchar_t *suffix);
 

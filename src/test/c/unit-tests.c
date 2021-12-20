@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include "munit.h"
-#include "../du/File.h"
-#include "../du/args.h"
-#include "../du/string-utils.h"
+#include "../../main/c/filename.h"
+#include "../../main/c/args.h"
+#include "../../main/c/string.h"
 
 #pragma warning(disable:4996) /* _CRT_SECURE_NO_WARNINGS */
 

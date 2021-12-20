@@ -136,17 +136,18 @@ List *listFiles(const wchar_t *path)
 {
     HANDLE findHandle;
     WIN32_FIND_DATA fileProperties;
-    wchar_t *search;
+    const wchar_t *search;
     bool moreDirectoryEntries;
     wchar_t *entry;
     List *files;
     DWORD lastError;
+    wchar_t *entryPath;
 
     files = initList();
     if (isGlob(path)) {
-        search = wcsdup(path);
+        search = path;
     } else {
-        search = concat3(path, DIR_SEPARATOR, L"*");
+        search = buildFileName(path, L"*");
     }
     findHandle = FindFirstFile(search, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
@@ -156,7 +157,8 @@ List *listFiles(const wchar_t *path)
         while (moreDirectoryEntries) {
             entry = fileProperties.cFileName;
             if (wcscmp(entry, L".") != 0 && wcscmp(entry, L"..") != 0) {
-            	appendListItem(files, entry);
+            	entryPath = buildFileName(path, entry);
+            	appendListItem(files, entryPath);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
                 if ((lastError = GetLastError()) == ERROR_NO_MORE_FILES) {
@@ -168,7 +170,6 @@ List *listFiles(const wchar_t *path)
         }
         FindClose(findHandle); /* Only close it if it got opened successfully */
     }
-	free(search);
     return files;
 }
 
@@ -220,3 +221,9 @@ bool isAbsolutePath(const wchar_t *path)
 		isAbsolutePath = false;
 	return isAbsolutePath;
 }
+
+wchar_t *buildFileName(const wchar_t *dir, const wchar_t *file)
+{
+	return concat3(dir, DIR_SEPARATOR, file);
+}
+

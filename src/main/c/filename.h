@@ -25,6 +25,7 @@ extern bool isFile(const wchar_t *path);
 extern bool isDirectory(const wchar_t *path);
 extern bool isGlob(const wchar_t *path);
 extern bool isAbsolutePath(const wchar_t *path);
+extern wchar_t *buildFileName(const wchar_t *dir, const wchar_t *file);
 
 #endif
 

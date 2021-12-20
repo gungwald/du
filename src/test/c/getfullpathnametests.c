@@ -3,9 +3,9 @@
 // function because GetFullPathName is supposed to determine the absolute path.
 //
 
-#include <iostream>
+#include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
+#include <windows.h>
 
 static TCHAR *queryForAbsolutePath(TCHAR *path);
 

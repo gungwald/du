@@ -1,11 +1,16 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <wchar.h>
 #include <windows.h>
 #include "args.h"
 #include "string.h"
 #include "help.h"
 
+/* If Microsoft's C compiler is being used, then include the local getopt.h
+   because Microsoft does not provide one. Otherwise include the system
+   getopt.h */
 #ifdef _MSC_FULL_VER
 #include "getopt.h"
 #else
@@ -63,21 +68,19 @@ List *setSwitches(int argc, const wchar_t *argv[])
             humanReadable = true;
             break;
         default:
-            _ftprintf(stderr, _T("%s: getopt_long returned unrecognized option: %c\n"), programName, optionChar);
+            fwprintf(stderr, L"%s: getopt_long returned unrecognized option: %c\n", programName, optionChar);
             exit(EXIT_FAILURE);
         }
     }
 
-    freeStrings(argc, arguments);
-
     if (displayRegularFilesAlso && summarize) {
-        _ftprintf(stderr, _T("%s: ERROR with arguments: cannot both summarize and show all entries\n"), programName);
+        fwprintf(stderr, L"%s: ERROR with arguments: cannot both summarize and show all entries\n", programName);
         exit(EXIT_FAILURE);
     }
 
     remainingArguments = initList();
     while (optind < argc) {
-        appendListItem(remainingArguments, argv[optind++]);
+        appendListItem(remainingArguments, wcsdup(argv[optind++]));
     }
     return remainingArguments;
 }

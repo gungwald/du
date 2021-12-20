@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include <gc.h>
 #include "string.h"
 #include "error.h"
 
@@ -15,8 +16,8 @@ wchar_t *concat(const wchar_t *left, const wchar_t *right)
     wchar_t *result;
 
     capacity = wcslen(left) + wcslen(right) + 1;
-    if ((result = (wchar_t*)malloc(capacity * sizeof(wchar_t))) == NULL) {
-        writeError2(errno, L"malloc failed for concat", left, right);
+    if ((result = (wchar_t *) GC_MALLOC(capacity * sizeof(wchar_t))) == NULL) {
+        writeError2(errno, L"GC_MALLOC failed for concat", left, right);
         exit(EXIT_FAILURE);
     } else {
         wcscpy(result, left);
@@ -33,9 +34,9 @@ wchar_t *concat3(const wchar_t *first,
     wchar_t *result;
 
     reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
-    result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
+    result = (wchar_t *) GC_MALLOC(reqSize * sizeof(wchar_t));
     if (result == NULL) {
-        writeError3(errno,L"Mem alloc failed concat3",first,second,third);
+        writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
         exit(EXIT_FAILURE);
     } else {
         wcscpy(result, first);
@@ -66,8 +67,8 @@ char *convertToUtf8(const wchar_t *wstr)
     char *utf8;
 
     /* Will include string terminator because of -1 argument. */
-    reqSize = WideCharToMultiByte(CP_UTF8,0,wstr,-1,NULL,0,NULL,NULL);
-    utf8 = (char *) malloc(reqSize);
+    reqSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+    utf8 = (char *) GC_MALLOC(reqSize);
     if (utf8) {
         /* Includes string terminator because of -1 argument. */
         WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,reqSize,NULL,NULL);
@@ -93,14 +94,3 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
     }
     return utf8StringArray;
 }
-
-void freeStrings(int elementCount, char *array[])
-{
-    int i;
-
-    for (i = 0; i < elementCount; i++) {
-        free(array[i]);
-    }
-    free(array);
-}
-

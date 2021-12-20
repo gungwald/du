@@ -6,9 +6,9 @@
 #include <tchar.h>
 #include <lmerr.h>
 #include <conio.h>
-#include "../du/error-handling.h"
-#include "../du/string-utils.h"
-#include "../du/File.h"
+#include "error.h"
+#include "string.h"
+#include "filename.h"
 
 #define FILE_TO_INSTALL _T("du.exe")
 #define PATH_REG_VALUE _T("Path")
@@ -24,12 +24,12 @@ int _tmain(int argc, TCHAR *argv[])
     TCHAR *path;
     TCHAR *updatedPath;
     DWORD sizeInBytes;
-    File *targetDir;
+    wchar_t *targetDir;
 
     programName = argv[0];
 
     if (argc > 1) {
-        targetDir = new_File(argv[1]);
+        targetDir = argv[1];
     } else {
         _ftprintf(stderr, _TEXT("Missing command line parameter for [TARGETDIR]"));
         exit(EXIT_FAILURE);
