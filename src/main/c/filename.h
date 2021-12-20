@@ -9,6 +9,7 @@
 #define FILENAME_H
 
 #include <stdbool.h>
+#include <stdint.h>     /* int64_t */
 #include <wchar.h>
 #include "list.h"
 #include "string.h"
@@ -19,7 +20,7 @@
 extern wchar_t *getAbsolutePath(const wchar_t *path);
 extern const wchar_t *getSimpleName(const wchar_t *path);
 extern wchar_t *getParentPath(const wchar_t *path);
-extern unsigned long getFileSize(wchar_t *path);
+extern int64_t getFileSize(wchar_t *path);
 extern List *listFiles(const wchar_t *path);
 extern bool isFile(const wchar_t *path);
 extern bool isDirectory(const wchar_t *path);

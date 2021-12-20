@@ -94,3 +94,21 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
     }
     return utf8StringArray;
 }
+
+bool startsWith(const wchar_t *s, const wchar_t *prefix) {
+    return wcsncmp(s, prefix, wcslen(prefix));
+}
+
+bool endsWith(const wchar_t *s, const wchar_t *suffix) {
+    size_t compareCount, sLength;
+    bool endsWith;
+
+    sLength = wcslen(s);
+    compareCount = wcslen(suffix);
+    if (compareCount > sLength) {
+        endsWith = false;
+    } else {
+        endsWith = wcscmp(s + sLength - compareCount, suffix);
+    }
+    return endsWith;
+}
