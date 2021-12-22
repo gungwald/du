@@ -5,7 +5,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <lmerr.h>
-#include <conio.h>
+#include <gc.h>
 #include "error.h"
 #include "string.h"
 #include "filename.h"
@@ -14,7 +14,6 @@
 #define PATH_REG_VALUE _T("Path")
 
 static TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value);
-static bool fileExists(TCHAR *path);
 TCHAR *programName;
 
 int _tmain(int argc, TCHAR *argv[])
@@ -26,6 +25,7 @@ int _tmain(int argc, TCHAR *argv[])
     DWORD sizeInBytes;
     wchar_t *targetDir;
 
+    GC_INIT();
     programName = argv[0];
 
     if (argc > 1) {
@@ -55,11 +55,9 @@ int _tmain(int argc, TCHAR *argv[])
         if (status != ERROR_SUCCESS) {
             writeLastError(status, _T("Failed to set registry value"), PATH_REG_VALUE);
         }
-        free(updatedPath);
     } else {
         _tprintf(_T("Directory %s already exists in user Path in the registry.\n"), getAbsolutePath(targetDir));
     }
-    free(path);
     return EXIT_SUCCESS;
 }
 
@@ -75,7 +73,7 @@ TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)
     status = RegGetValue(key, NULL, value, RRF_RT_ANY, NULL, NULL, &requiredBufferSizeInBytes);
     if (status == ERROR_MORE_DATA || status == ERROR_SUCCESS) {
         /* This is what we wanted to happen. Now we know the required size. */
-        data = (TCHAR *) malloc(requiredBufferSizeInBytes);
+        data = (TCHAR *) GC_MALLOC(requiredBufferSizeInBytes);
         if (data == NULL) {
             writeError(errno, _T("Failed to allocate memory"), _T("Path environment variable"));
             exit(EXIT_FAILURE);
@@ -93,18 +91,3 @@ TCHAR *getRegistryStringValueForUpdate(HKEY key, const TCHAR *value)
     return data;
 }
 
-bool fileExists(TCHAR *path)
-{
-    HANDLE findHandle;
-    WIN32_FIND_DATA fileProperties;
-    bool fileExists;
-
-    findHandle = FindFirstFile(path, &fileProperties);
-    if (findHandle == INVALID_HANDLE_VALUE) {
-        fileExists = false;
-    } else {
-        fileExists = true;
-        FindClose(findHandle);
-    }
-    return fileExists;
-}

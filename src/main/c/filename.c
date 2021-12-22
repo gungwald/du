@@ -17,13 +17,13 @@ static wchar_t* makeExtendedLengthPath(const wchar_t *path);
 static wchar_t* makeNormalPath(const wchar_t *path);
 static bool isExtendedLengthPath(const wchar_t *path);
 static wchar_t* slashToBackslash(const wchar_t *path);
-static wchar_t* skipPrefix(wchar_t *path);
+static const wchar_t* skipPrefix(wchar_t *path);
 static HANDLE open(const wchar_t *path);
 static void close(HANDLE h);
 static int64_t getAllocatedFileSize(const wchar_t *path);
 
 /* Result should be freed. */
-static wchar_t* slashToBackslash(const wchar_t *path) {
+static wchar_t* slashToBackslash(const wchar_t *path) { // @suppress("Unused static function")
     /* Make sure all separators are backslashes. */
     return replaceAll(_tcsdup(path), _TEXT('/'), _TEXT('\\'));
 }
@@ -94,7 +94,7 @@ const wchar_t* getSimpleName(const wchar_t *path) {
 }
 
 /* Returns pointer which should not be freed. */
-wchar_t* skipPrefix(wchar_t *path) {
+static const wchar_t* skipPrefix(wchar_t *path) { // @suppress("Unused static function")
     size_t prefixLength;
     wchar_t *result;
 
@@ -147,7 +147,7 @@ List* listFiles(const wchar_t *path) {
     if (isGlob(path)) {
         search = path;
     } else {
-        search = buildFileName(path, L"*");
+        search = buildPath(path, L"*");
     }
     findHandle = FindFirstFile(search, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
@@ -158,7 +158,7 @@ List* listFiles(const wchar_t *path) {
         while (moreDirectoryEntries) {
             entry = fileProperties.cFileName;
             if (wcscmp(entry, L".") != 0 && wcscmp(entry, L"..") != 0) {
-                entryPath = buildFileName(path, entry);
+                entryPath = buildPath(path, entry);
                 appendListItem(&files, entryPath);
             }
             if (!FindNextFile(findHandle, &fileProperties)) {
@@ -221,8 +221,24 @@ bool isAbsolutePath(const wchar_t *path) {
     return isAbsolutePath;
 }
 
-wchar_t* buildFileName(const wchar_t *dir, const wchar_t *file) {
+wchar_t* buildPath(const wchar_t *dir, const wchar_t *file) {
     return concat3(dir, DIR_SEPARATOR, file);
+}
+
+bool fileExists(wchar_t *path)
+{
+    HANDLE findHandle;
+    WIN32_FIND_DATA fileProperties;
+    bool fileExists;
+
+    findHandle = FindFirstFile(path, &fileProperties);
+    if (findHandle == INVALID_HANDLE_VALUE) {
+        fileExists = false;
+    } else {
+        fileExists = true;
+        FindClose(findHandle);
+    }
+    return fileExists;
 }
 
 /* Result must be freed. */
@@ -230,11 +246,11 @@ static wchar_t* makeExtendedLengthPath(const wchar_t *path) {
     return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-static wchar_t* makeNormalPath(const wchar_t *path) {
+static wchar_t* makeNormalPath(const wchar_t *path) { // @suppress("Unused static function")
     return wcsdup(path + wcslen(EXTENDED_LENGTH_PATH_PREFIX));
 }
 
-static bool isExtendedLengthPath(const wchar_t *path) {
+static bool isExtendedLengthPath(const wchar_t *path) { // @suppress("Unused static function")
     return startsWith(path, EXTENDED_LENGTH_PATH_PREFIX);
 }
 

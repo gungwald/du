@@ -96,7 +96,7 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
 }
 
 bool startsWith(const wchar_t *s, const wchar_t *prefix) {
-    return wcsncmp(s, prefix, wcslen(prefix));
+    return wcsncmp(s, prefix, wcslen(prefix)) == 0;
 }
 
 bool endsWith(const wchar_t *s, const wchar_t *suffix) {
@@ -108,7 +108,7 @@ bool endsWith(const wchar_t *s, const wchar_t *suffix) {
     if (compareCount > sLength) {
         endsWith = false;
     } else {
-        endsWith = wcscmp(s + sLength - compareCount, suffix);
+        endsWith = wcscmp(s + sLength - compareCount, suffix) == 0;
     }
     return endsWith;
 }
