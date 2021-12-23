@@ -59,16 +59,36 @@
 
 static void printFileSize(wchar_t *path, unsigned long size);
 static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
+static void setup();
+static void du(int argc, const wchar_t *argv[]);
 
 const wchar_t *programName;
 
-int wmain(int argc, const wchar_t *argv[]) {
+int wmain(int argc, const wchar_t *argv[])
+{
+    GC_INIT();
+    programName = argv[0];
+    if (endsWith(programName, L"du-setup.exe")) {
+        setup();
+    } else {
+        du(argc, argv);
+    }
+    return EXIT_SUCCESS;
+}
+
+static void setup()
+{
+    /* Create %USERPROFILE%/bin */
+    /* Copy self to bin/du.exe */
+    /* Update user PATH in registry */
+}
+
+static void du(int argc, const wchar_t *argv[])
+{
     List *fileArgs;
     List *node;
     wchar_t *argument;
 
-    GC_INIT();
-    programName = argv[0];
     fileArgs = setSwitches(argc, argv);
     if (getListSize(fileArgs) > 0) {
         for (node = fileArgs; !isListEmpty(node); node = skipListItem(node)) {
@@ -79,7 +99,6 @@ int wmain(int argc, const wchar_t *argv[]) {
         argument = getAbsolutePath(DEFAULT_PATH);
         calcDiskUsage(argument, true);
     }
-    return EXIT_SUCCESS;
 }
 
 void printFileSize(wchar_t *path, unsigned long size) {

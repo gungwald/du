@@ -7,12 +7,11 @@ CFLAGS=-DUNICODE -D_UNICODE -municode -Wall -g
 TARGET=du.exe
 OBJS=du.o string.o error.o filename.o list.o help.o args.o
 HEADERS=du.h string.h error.h filename.h list.h help.h args.h getopt.h
-SHELL=$(COMSPEC) /c
 
 all: build-number $(TARGET)
 
 build-number:
-	..\\..\\build\\shell\\increment-build-number.bat build-number.h
+	..\..\build\c\increment-build-number.exe build-number.h
 
 $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) -o $(TARGET) $(LDFLAGS) $(OBJS) $(LDLIBS)
