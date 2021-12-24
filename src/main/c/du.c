@@ -61,6 +61,7 @@ static void printFileSize(wchar_t *path, unsigned long size);
 static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
 static void setup();
 static void du(int argc, const wchar_t *argv[]);
+static const wchar_t *getEnvironmentVariable(const wchar_t *name);
 
 const wchar_t *programName;
 
@@ -76,11 +77,52 @@ int wmain(int argc, const wchar_t *argv[])
     return EXIT_SUCCESS;
 }
 
+static const wchar_t *getEnvironmentVariable(const wchar_t *name)
+{
+    wchar_t *value;
+    DWORD reqSize;
+    const DWORD GEV_FAILURE = 0;
+
+    if ((reqSize = GetEnvironmentVariable(name, value, 0)) == GEV_FAILURE) {
+        writeLastError(GetLastError(), L"Failed to get size for environment variable", name);
+        exit(EXIT_FAILURE);
+    }
+    if ((value = (wchar_t *) GC_MALLOC(reqSize)) == NULL) {
+        writeError(errno, L"Failed to allocate memory for environment variable value for", name);
+        exit(EXIT_FAILURE);
+    }
+    if (GetEnvironmentVariable(name, value, reqSize) == GEV_FAILURE) {
+        writeLastError(GetLastError(), L"Failed to get environment variable", name);
+        exit(EXIT_FAILURE);
+    }
+    return value;
+}
+
 static void setup()
 {
+    const wchar_t *homeDir;
+    wchar_t *binDir;
+    wchar_t *installedProgram;
+    const BOOL CREATEDIRECTORY_FAILURE = FALSE;
+    const BOOL COPYFILE_FAILURE = FALSE;
+
     /* Create %USERPROFILE%/bin */
+    homeDir = getEnvironmentVariable(L"USERPROFILE");
+    binDir = buildPath(homeDir, L"bin");
+    if (! fileExists(binDir)) {
+        if (CreateDirectory(binDir, NULL) == CREATEDIRECTORY_FAILURE) {
+            writeLastError(GetLastError(), L"Failed to create directory", binDir);
+            exit(EXIT_FAILURE);
+        }
+    }
     /* Copy self to bin/du.exe */
+    installedProgram = buildPath(binDir, L"du.exe");
+    if (CopyFile(programName, installedProgram, FALSE) == COPYFILE_FAILURE) {
+        writeLastError(GetLastError(), L"Failed to copy self to", installedProgram);
+        exit(EXIT_FAILURE);
+    }
     /* Update user PATH in registry */
+
 }
 
 static void du(int argc, const wchar_t *argv[])
