@@ -34,7 +34,7 @@ wchar_t *concat3(const wchar_t *first,
     wchar_t *result;
 
     reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
-    result = (wchar_t *) GC_MALLOC(reqSize * sizeof(wchar_t));
+    result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
     if (result == NULL) {
         writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
         exit(EXIT_FAILURE);
@@ -111,4 +111,30 @@ bool endsWith(const wchar_t *s, const wchar_t *suffix) {
         endsWith = wcscmp(s + sLength - compareCount, suffix) == 0;
     }
     return endsWith;
+}
+
+wchar_t *toLowerCase(const wchar_t *s) {
+    wchar_t *lower;
+    wchar_t *p;
+
+    lower = createStringCopy(s);
+    for (p = lower; *p; p++) {
+        tolower(*p);
+    }
+    return lower;
+}
+
+wchar_t *createStringCopy(const wchar_t *s) {
+    size_t size;
+    wchar_t *copy;
+
+    size = wcslen(s) + 1;
+    copy = (wchar_t *) GC_MALLOC(size * sizeof(wchar_t *));
+    if (copy) {
+        wcscpy(copy, s);
+    } else {
+        _wperror(L"Failed to allocate memory for string copy");
+        exit(EXIT_FAILURE);
+    }
+    return copy;
 }

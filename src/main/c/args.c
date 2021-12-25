@@ -68,13 +68,13 @@ List *setSwitches(int argc, const wchar_t *argv[])
             humanReadable = true;
             break;
         default:
-            fwprintf(stderr, L"%s: getopt_long returned unrecognized option: %c\n", programName, optionChar);
+            fwprintf(stderr, L"%ls: getopt_long returned unrecognized option: %c\n", programName, optionChar);
             exit(EXIT_FAILURE);
         }
     }
 
     if (displayRegularFilesAlso && summarize) {
-        fwprintf(stderr, L"%s: ERROR with arguments: cannot both summarize and show all entries\n", programName);
+        fwprintf(stderr, L"%ls: ERROR with arguments: cannot both summarize and show all entries\n", programName);
         exit(EXIT_FAILURE);
     }
 

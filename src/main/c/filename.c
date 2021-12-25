@@ -257,8 +257,13 @@ static bool isExtendedLengthPath(const wchar_t *path) { // @suppress("Unused sta
 static HANDLE open(const wchar_t *path) {
     HANDLE fileHandle;
     wchar_t *extendedPath;
+    wchar_t *absPath;
 
-    extendedPath =  makeExtendedLengthPath(path);
+    if (isAbsolutePath(path)) {
+        extendedPath =  makeExtendedLengthPath(path);
+    } else {
+        extendedPath = makeExtendedLengthPath(getAbsolutePath(path));
+    }
     fileHandle = CreateFile(
                     extendedPath,                       /* file name */
                     GENERIC_READ,                       /* desired access */

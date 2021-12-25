@@ -12,6 +12,8 @@ extern char *convertToUtf8(const wchar_t *s);
 extern char **convertAllToUtf8(int count, const wchar_t *strs[]);
 extern bool startsWith(const wchar_t *s, const wchar_t *prefix);
 extern bool endsWith(const wchar_t *s, const wchar_t *suffix);
+extern wchar_t *createStringCopy(const wchar_t *s);
+extern wchar_t *toLowerCase(const wchar_t *s);
 
 #endif
 

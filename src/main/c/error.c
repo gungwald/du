@@ -57,7 +57,7 @@ void writeError(errno_t errorCode, const _TCHAR* message, const _TCHAR* object)
     _TCHAR errorText[ERROR_TEXT_CAPACITY];
 
     _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\": %s\n"), programName, message, object, errorText);
+    _ftprintf(stderr, _TEXT("%ls: %ls: \"%ls\": %ls\n"), programName, message, object, errorText);
 }
 
 void writeError2(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2)
@@ -65,7 +65,7 @@ void writeError2(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1
     _TCHAR errorText[ERROR_TEXT_CAPACITY];
 
     _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\" and \"%s\": %s\n"), programName, message, object1, object2, errorText);
+    _ftprintf(stderr, _TEXT("%ls: %ls: \"%ls\" and \"%ls\": %ls\n"), programName, message, object1, object2, errorText);
 }
 
 void writeError3(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1, const _TCHAR* object2, const _TCHAR* object3)
@@ -73,18 +73,19 @@ void writeError3(errno_t errorCode, const _TCHAR* message, const _TCHAR* object1
     _TCHAR errorText[ERROR_TEXT_CAPACITY];
 
     _tcserror_s(errorText, ERROR_TEXT_CAPACITY, errorCode);
-    _ftprintf(stderr, _TEXT("%s: %s: \"%s\", \"%s\" and \"%s\": %s\n"), programName, message, object1, object2, object3, errorText);
+    _ftprintf(stderr, _TEXT("%ls: %ls: \"%ls\", \"%ls\" and \"%ls\": %ls\n"), programName, message, object1, object2, object3, errorText);
 }
 
 void writeLastError(DWORD lastError, const _TCHAR* message, const _TCHAR* object)
 {
-    _ftprintf(stderr, _TEXT("%s: %s: %s: "), programName, message, object);
+    _ftprintf(stderr, _TEXT("%ls: %ls: %ls: "), programName, message, object);
     displayErrorText(lastError);
     /* _ftprintf(stderr, _TEXT("\n")); */
+    fflush(stderr);
 }
 
 void writeLastError2(DWORD lastError, const TCHAR* message, const TCHAR* object1, const TCHAR *object2)
 {
-    _ftprintf(stderr, _TEXT("%s: %s: %s and %s: "), programName, message, object1, object2);
+    _ftprintf(stderr, _TEXT("%ls: %ls: %ls and %ls: "), programName, message, object1, object2);
     displayErrorText(lastError);
 }

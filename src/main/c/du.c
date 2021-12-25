@@ -44,6 +44,7 @@
 #include "list.h"
 #include "args.h"
 #include "help.h"
+#include "registry.h"
 
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
@@ -69,7 +70,7 @@ int wmain(int argc, const wchar_t *argv[])
 {
     GC_INIT();
     programName = argv[0];
-    if (endsWith(programName, L"du-setup.exe")) {
+    if (startsWith(getSimpleName(programName), L"du-setup")) {
         setup();
     } else {
         du(argc, argv);
@@ -103,6 +104,7 @@ static void setup()
     const wchar_t *homeDir;
     wchar_t *binDir;
     wchar_t *installedProgram;
+    const wchar_t *exactProgramName;
     const BOOL CREATEDIRECTORY_FAILURE = FALSE;
     const BOOL COPYFILE_FAILURE = FALSE;
 
@@ -110,6 +112,7 @@ static void setup()
     homeDir = getEnvironmentVariable(L"USERPROFILE");
     binDir = buildPath(homeDir, L"bin");
     if (! fileExists(binDir)) {
+        wprintf(L"Creating install directory %ls\n", binDir);
         if (CreateDirectory(binDir, NULL) == CREATEDIRECTORY_FAILURE) {
             writeLastError(GetLastError(), L"Failed to create directory", binDir);
             exit(EXIT_FAILURE);
@@ -117,12 +120,18 @@ static void setup()
     }
     /* Copy self to bin/du.exe */
     installedProgram = buildPath(binDir, L"du.exe");
-    if (CopyFile(programName, installedProgram, FALSE) == COPYFILE_FAILURE) {
+    if (endsWith(toLowerCase(programName), L".exe")) {
+        exactProgramName = programName;
+    } else {
+        exactProgramName = concat(programName, L".exe");
+    }
+    wprintf(L"Installing %ls.\n", installedProgram);
+    if (CopyFile(exactProgramName, installedProgram, FALSE) == COPYFILE_FAILURE) {
         writeLastError(GetLastError(), L"Failed to copy self to", installedProgram);
         exit(EXIT_FAILURE);
     }
     /* Update user PATH in registry */
-
+    appendToUserPath(binDir);
 }
 
 static void du(int argc, const wchar_t *argv[])
