@@ -47,6 +47,27 @@ wchar_t *concat3(const wchar_t *first,
     return result;
 }
 
+wchar_t *concat4(const wchar_t *first,
+                 const wchar_t *second,
+                 const wchar_t *third,
+                 const wchar_t *fourth)
+{
+    size_t reqSize;
+    wchar_t *result;
+
+    reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
+    result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
+    if (result == NULL) {
+        writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
+        exit(EXIT_FAILURE);
+    } else {
+        wcscpy(result, first);
+        wcscat(result, second);
+        wcscat(result, third);
+    }
+    return result;
+}
+
 /**
  * s is modified.
  */

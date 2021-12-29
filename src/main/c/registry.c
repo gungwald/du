@@ -17,6 +17,7 @@ int appendToUserPath(_TCHAR *newPathElement)
     TCHAR *path;
     TCHAR *updatedPath;
     DWORD sizeInBytes;
+    _TCHAR *absNewPathElement;
 
     status = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Environment"), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &environmentKey);
     if (status != ERROR_SUCCESS) {
@@ -25,13 +26,15 @@ int appendToUserPath(_TCHAR *newPathElement)
     }
 
     path = getRegistryStringValueForUpdate(environmentKey, PATH_REG_VALUE);
-    if (_tcsstr(path, getAbsolutePath(newPathElement)) == NULL) {
+    absNewPathElement = getAbsolutePath(newPathElement);
+    if (_tcsstr(path, absNewPathElement) == NULL) {
         /* Our installDir is not in the Path yet. */
-        _tprintf(_T("Appending %ls to user Path in the registry.\n"), getAbsolutePath(newPathElement));
+        _tprintf(_T("Appending %ls to user Path in the registry.\n"), absNewPathElement);
         if (path[_tcslen(path) - 1] == ';') {
-            updatedPath = concat(path, getAbsolutePath(newPathElement));
+            updatedPath = concat3(path, absNewPathElement, _T(";"));
         } else {
-            updatedPath = concat3(path, _T(";"), getAbsolutePath(newPathElement));
+            updatedPath = concat3(path, _T(";"), absNewPathElement);
+            updatedPath = concat(updatedPath, _T(";"));
         }
         sizeInBytes = sizeof(TCHAR) * (_tcslen(updatedPath) + 1);
         status = RegSetValueEx(environmentKey, PATH_REG_VALUE, 0, REG_EXPAND_SZ, (const BYTE *) updatedPath, sizeInBytes);
@@ -41,8 +44,8 @@ int appendToUserPath(_TCHAR *newPathElement)
             wprintf(L"Restart your command line window to enable the updated Path.\n");
         }
     } else {
-        wprintf(L"Directory %ls already exists in user Path in the registry.\n", getAbsolutePath(newPathElement));
-        wprintf(L"You're ready to run the 'du' command.\n", getAbsolutePath(newPathElement));
+        wprintf(L"Directory %ls already exists in user Path in the registry.\n", absNewPathElement);
+        wprintf(L"You're ready to run the 'du' command.\n", absNewPathElement);
     }
     return EXIT_SUCCESS;
 }
