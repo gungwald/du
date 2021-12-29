@@ -83,10 +83,16 @@ static const wchar_t *getEnvironmentVariable(const wchar_t *name)
     wchar_t *value;
     DWORD reqSize;
     const DWORD GEV_FAILURE = 0;
+    DWORD win32ApiError;
 
     if ((reqSize = GetEnvironmentVariable(name, value, 0)) == GEV_FAILURE) {
-        writeLastError(GetLastError(), L"Failed to get size for environment variable", name);
-        exit(EXIT_FAILURE);
+        win32ApiError = GetLastError();
+        if (win32ApiError == ERROR_ENVVAR_NOT_FOUND) {
+            value = L"";
+        } else {
+            writeLastError(win32ApiError, L"Failed to get size for environment variable", name);
+            exit(EXIT_FAILURE);
+        }
     }
     if ((value = (wchar_t *) GC_MALLOC(reqSize)) == NULL) {
         writeError(errno, L"Failed to allocate memory for environment variable value for", name);
