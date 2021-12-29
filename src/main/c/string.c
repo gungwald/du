@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include <ctype.h>      /* tolower */
 #include <gc.h>
 #include "string.h"
 #include "error.h"
@@ -119,7 +120,7 @@ wchar_t *toLowerCase(const wchar_t *s) {
 
     lower = createStringCopy(s);
     for (p = lower; *p; p++) {
-        tolower(*p);
+        *p = tolower(*p);
     }
     return lower;
 }

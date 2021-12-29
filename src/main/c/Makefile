@@ -3,22 +3,67 @@ CC=i686-w64-mingw32-gcc
 LDFLAGS=-municode
 # Using -l:libgc.a causes libwinpthreads to get dynamically linked, but this does not:
 LDLIBS=-Wl,-Bstatic -lgc
-CFLAGS=-DUNICODE -D_UNICODE -municode -Wall -g
+CFLAGS=-DUNICODE -D_UNICODE -municode -Wall
 TARGET=du.exe
 INSTALLER=du-setup.exe
-OBJS=du.o string.o error.o filename.o list.o help.o args.o registry.o
-HEADERS=du.h string.h error.h filename.h list.h help.h args.h getopt.h registry.h
 
-all: build-number $(TARGET) $(INSTALLER)
+.PHONY: all clean debug release remake
 
-$(INSTALLER): $(TARGET)
-	cp $(TARGET) $(INSTALLER)
+all: debug
 
-build-number:
-	..\..\build\c\increment-build-number.exe build-number.h
+# Use the shell find command to get the source tree
+SRCS := $(shell find * -type f -name "*.c")
+OBJS = $(SRCS:.c=.o)
 
-$(TARGET): $(OBJS) $(HEADERS)
-	$(CC) -o $(TARGET) $(LDFLAGS) $(OBJS) $(LDLIBS)
+DEBUG_DIR=Debug
+DEBUG_TARGET=$(DEBUG_DIR)/$(TARGET)
+DEBUG_OBJS=$(addprefix $(DEBUG_DIR)/, $(OBJS))
+DEBUG_FLAGS=-g
+DEBUG_INSTALLER=$(DEBUG_DIR)/$(INSTALLER)
+
+debug: $(DEBUG_DIR) $(DEBUG_INSTALLER)
+
+$(DEBUG_INSTALLER): $(DEBUG_TARGET)
+	cp $(DEBUG_TARGET) $(DEBUG_INSTALLER)
+
+$(DEBUG_TARGET): $(DEBUG_OBJS)
+	$(CC) -o $(DEBUG_TARGET) $(LDFLAGS) $^ $(LDLIBS)
+
+$(DEBUG_OBJS): $(DEBUG_DIR)/%.o: %.c
+	$(CC) -MMD -MP $(CFLAGS) $(DEBUG_FLAGS) -c $< -o $@
+
+$(DEBUG_DIR):
+	mkdir -p $(DEBUG_DIR)
+
+-include $(DEBUG_OBJS:.o=.d)
+
+
+RELEASE_DIR = Release
+RELEASE_TARGET = $(RELEASE_DIR)/$(TARGET)
+RELEASE_OBJS = $(addprefix $(RELEASE_DIR)/, $(OBJS))
+RELEASE_FLAGS = -O3
+RELEASE_INSTALLER=$(RELEASE_DIR)/$(INSTALLER)
+
+release: $(RELEASE_DIR) $(RELEASE_INSTALLER)
+
+$(RELEASE_INSTALLER): $(RELEASE_TARGET)
+	cp $(RELEASE_TARGET) $(RELEASE_INSTALLER)
+
+$(RELEASE_TARGET): $(RELEASE_OBJS)
+	$(CC) -o $(RELEASE_TARGET) $(LDFLAGS) $^ $(LDLIBS)
+	strip $(RELEASE_TARGET)
+
+$(RELEASE_OBJS): $(RELEASE_DIR)/%.o: %.c
+	$(CC) -MMD -MP $(CFLAGS) $(RELEASE_FLAGS) -c $< -o $@
+
+-include $(RELEASE_OBJS:.o=.d)
+
+$(RELEASE_DIR):
+	mkdir -p $(RELEASE_DIR)
+
+
+
+remake: clean all
 
 clean:
-	$(RM) $(OBJS) $(TARGET)
+	$(RM) -r $(RELEASE_DIR) $(DEBUG_DIR)

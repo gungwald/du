@@ -10,7 +10,7 @@
 #include "args.h"
 
 enum FileType {
-    FILETYPE_DIRECTORY, FILETYPE_FILE, FILETYPE_GLOB
+    FILETYPE_DIRECTORY, FILETYPE_FILE, FILETYPE_GLOB, FILETYPE_UNKNOWN
 };
 
 static wchar_t* makeExtendedLengthPath(const wchar_t *path);
@@ -184,8 +184,8 @@ enum FileType getFileType(const wchar_t *path) {
     } else {
         fileAttributes = GetFileAttributes(path);
         if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-            writeLastError(GetLastError(), L"Failed to get file attributes",
-                    path);
+            type = FILETYPE_UNKNOWN;
+            writeLastError(GetLastError(), L"Failed to get file attributes", path);
         } else if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             type = FILETYPE_DIRECTORY;
         } else {
@@ -257,7 +257,6 @@ static bool isExtendedLengthPath(const wchar_t *path) { // @suppress("Unused sta
 static HANDLE open(const wchar_t *path) {
     HANDLE fileHandle;
     wchar_t *extendedPath;
-    wchar_t *absPath;
 
     if (isAbsolutePath(path)) {
         extendedPath =  makeExtendedLengthPath(path);
