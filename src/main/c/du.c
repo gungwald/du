@@ -137,7 +137,7 @@ static void setup()
         exit(EXIT_FAILURE);
     }
     /* Update user PATH in registry */
-    appendToUserPath(binDir);
+    addElementToRegistryUserPath(binDir);
 }
 
 static void du(int argc, const wchar_t *argv[])

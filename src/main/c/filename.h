@@ -28,6 +28,11 @@ extern bool isGlob(const wchar_t *path);
 extern bool isAbsolutePath(const wchar_t *path);
 extern wchar_t *buildPath(const wchar_t *dir, const wchar_t *file);
 extern bool fileExists(wchar_t *path);
+extern wchar_t* makeExtendedLengthPath(const wchar_t *path);
+extern wchar_t* makeNormalPath(const wchar_t *path);
+extern bool isExtendedLengthPath(const wchar_t *path);
+extern wchar_t* slashToBackslash(const wchar_t *path);
+extern const wchar_t* skipPrefix(wchar_t *path);
 
 #endif
 

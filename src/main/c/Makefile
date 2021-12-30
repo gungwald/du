@@ -21,7 +21,7 @@ DEBUG_OBJS=$(addprefix $(DEBUG_DIR)/, $(OBJS))
 DEBUG_FLAGS=-g
 DEBUG_INSTALLER=$(DEBUG_DIR)/$(INSTALLER)
 
-debug: $(DEBUG_DIR) $(DEBUG_INSTALLER)
+debug: build-number $(DEBUG_DIR) $(DEBUG_INSTALLER)
 
 $(DEBUG_INSTALLER): $(DEBUG_TARGET)
 	cp $(DEBUG_TARGET) $(DEBUG_INSTALLER)
@@ -44,7 +44,7 @@ RELEASE_OBJS = $(addprefix $(RELEASE_DIR)/, $(OBJS))
 RELEASE_FLAGS = -O3
 RELEASE_INSTALLER=$(RELEASE_DIR)/$(INSTALLER)
 
-release: $(RELEASE_DIR) $(RELEASE_INSTALLER)
+release: build-number $(RELEASE_DIR) $(RELEASE_INSTALLER)
 
 $(RELEASE_INSTALLER): $(RELEASE_TARGET)
 	cp $(RELEASE_TARGET) $(RELEASE_INSTALLER)
@@ -62,6 +62,8 @@ $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)
 
 
+build-number:
+	..\..\build\c\increment-build-number.exe build-number.h
 
 remake: clean all
 

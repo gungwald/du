@@ -13,17 +13,12 @@ enum FileType {
     FILETYPE_DIRECTORY, FILETYPE_FILE, FILETYPE_GLOB, FILETYPE_UNKNOWN
 };
 
-static wchar_t* makeExtendedLengthPath(const wchar_t *path);
-static wchar_t* makeNormalPath(const wchar_t *path);
-static bool isExtendedLengthPath(const wchar_t *path);
-static wchar_t* slashToBackslash(const wchar_t *path);
-static const wchar_t* skipPrefix(wchar_t *path);
 static HANDLE open(const wchar_t *path);
 static void close(HANDLE h);
 static int64_t getAllocatedFileSize(const wchar_t *path);
 
 /* Result should be freed. */
-static wchar_t* slashToBackslash(const wchar_t *path) { // @suppress("Unused static function")
+extern wchar_t* slashToBackslash(const wchar_t *path) {
     /* Make sure all separators are backslashes. */
     return replaceAll(_tcsdup(path), _TEXT('/'), _TEXT('\\'));
 }
@@ -94,7 +89,7 @@ const wchar_t* getSimpleName(const wchar_t *path) {
 }
 
 /* Returns pointer which should not be freed. */
-static const wchar_t* skipPrefix(wchar_t *path) { // @suppress("Unused static function")
+extern const wchar_t* skipPrefix(wchar_t *path) {
     size_t prefixLength;
     wchar_t *result;
 
@@ -242,15 +237,15 @@ bool fileExists(wchar_t *path)
 }
 
 /* Result must be freed. */
-static wchar_t* makeExtendedLengthPath(const wchar_t *path) {
+extern wchar_t* makeExtendedLengthPath(const wchar_t *path) {
     return concat(EXTENDED_LENGTH_PATH_PREFIX, path);
 }
 
-static wchar_t* makeNormalPath(const wchar_t *path) { // @suppress("Unused static function")
+extern wchar_t* makeNormalPath(const wchar_t *path) {
     return wcsdup(path + wcslen(EXTENDED_LENGTH_PATH_PREFIX));
 }
 
-static bool isExtendedLengthPath(const wchar_t *path) { // @suppress("Unused static function")
+extern bool isExtendedLengthPath(const wchar_t *path) {
     return startsWith(path, EXTENDED_LENGTH_PATH_PREFIX);
 }
 
