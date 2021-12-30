@@ -55,7 +55,7 @@ wchar_t *concat4(const wchar_t *first,
     size_t reqSize;
     wchar_t *result;
 
-    reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
+    reqSize = wcslen(first) + wcslen(second) + wcslen(third) + wcslen(fourth)+ 1;
     result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
     if (result == NULL) {
         writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
@@ -64,6 +64,7 @@ wchar_t *concat4(const wchar_t *first,
         wcscpy(result, first);
         wcscat(result, second);
         wcscat(result, third);
+        wcscat(result, fourth);
     }
     return result;
 }
@@ -133,6 +134,14 @@ bool endsWith(const wchar_t *s, const wchar_t *suffix) {
         endsWith = wcscmp(s + sLength - compareCount, suffix) == 0;
     }
     return endsWith;
+}
+
+bool endsWithChar(const wchar_t *s, wchar_t c) {
+    return s[wcslen(s)-1] == c;
+}
+
+bool stringContains(const wchar_t *container, const wchar_t *value) {
+    return wcsstr(container, value) != NULL;
 }
 
 wchar_t *toLowerCase(const wchar_t *s) {

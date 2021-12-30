@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <tchar.h>
 
+extern void setRegistryStringValue(HKEY key, const _TCHAR *valueName, const _TCHAR *data);
 extern _TCHAR *getRegistryStringValueForUpdate(HKEY key, const _TCHAR *value);
 extern int appendToUserPath(_TCHAR *newPathElement);
 
