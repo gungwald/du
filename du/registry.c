@@ -54,10 +54,10 @@ void closeRegistryKey(HKEY key, const _TCHAR *keyName) {
 }
 
 void setRegistryStringData(HKEY key, const _TCHAR *valueName, const _TCHAR *data) {
-    DWORD sizeInBytes;
+    size_t sizeInBytes;
     LSTATUS status;
     sizeInBytes = sizeof(_TCHAR) * (_tcslen(data) + 1);
-    status = RegSetValueExW(key, valueName, 0, REG_EXPAND_SZ, (const BYTE *) data, sizeInBytes);
+    status = RegSetValueExW(key, valueName, 0, REG_EXPAND_SZ, (const BYTE *) data, (DWORD) sizeInBytes);
     if (status == ERROR_SUCCESS) {
         wprintf(L"Restart your command line window to enable the updated Path.\n");
     } else {

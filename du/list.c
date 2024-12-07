@@ -1,3 +1,4 @@
+#include <stdio.h>  /* fflush */
 #include <wchar.h>	/* wcsdup */
 #include <gc.h>
 #include "list.h"
@@ -10,15 +11,16 @@ bool isListEmpty(const List *list) {
     return list == NULL;
 }
 
-void* removeListItem(List **l) {
-    void *data;
+wchar_t* removeListItem(List **l) {
+    wchar_t *data;
 
     data = (*l)->data;
     *l = (*l)->next;
     return data;
 }
 
-List* appendListItem(List **l, void *data) {
+/* Make sure the data is dynamically allocated and no other code has access to it. */
+List* appendListItem(List **l, wchar_t *data) {
     struct ListNode *node;
     struct ListNode *toPutAtEnd;
 
@@ -38,7 +40,7 @@ List* appendListItem(List **l, void *data) {
     return *l;
 }
 
-const void* getListItem(const List *l) {
+const wchar_t* getListItem(const List *l) {
     return l->data;
 }
 
@@ -58,3 +60,16 @@ size_t getListSize(const List *l) {
     }
     return i;
 }
+
+/* l better be a list of wchar_t * or this will crash. */
+void printStringList(const List* l)
+{
+    const struct ListNode* node;
+    node = l;
+    while (node != NULL) {
+        wprintf(L"%ls\n", node->data);
+        node = node->next;
+    }
+    fflush(stdout);
+}
+

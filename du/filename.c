@@ -9,6 +9,9 @@
 #include "trace.h"
 #include "args.h"
 
+/* Turn off security warnings about string functions. The correct amount of space is always allocated. */
+#pragma warning(disable : 4996)
+
 enum FileType {
     FILETYPE_DIRECTORY, FILETYPE_FILE, FILETYPE_GLOB, FILETYPE_UNKNOWN
 };
@@ -63,13 +66,17 @@ wchar_t* getParentPath(const wchar_t *path) {
     size_t parentSize;
 
     if (isAbsolutePath(path)) {
-        absPath = wcsdup(path);
+        absPath = _wcsdup(path); /* wcsdup is not part of ISO C ? */
     } else {
         absPath = getAbsolutePath(path);
     }
     lastBackslashPointer = wcsrchr(absPath, L'\\');
     parentSize = lastBackslashPointer - absPath + 1;
     parent = (wchar_t*) GC_MALLOC(parentSize * sizeof(wchar_t));
+    if (parent == NULL) {
+        writeError(errno, L"Failed to allocate memory for", path);
+        exit(EXIT_FAILURE);
+    }
     wcsncpy(parent, absPath, parentSize);
     free(absPath);
     return parent;
@@ -146,8 +153,7 @@ List* listFiles(const wchar_t *path) {
     }
     findHandle = FindFirstFile(search, &fileProperties);
     if (findHandle == INVALID_HANDLE_VALUE) {
-        writeLastError(GetLastError(), L"Failed to get handle for pattern",
-                search);
+        writeLastError(GetLastError(), L"Failed to get handle for pattern", search);
     } else {
         moreDirectoryEntries = true;
         while (moreDirectoryEntries) {

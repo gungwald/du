@@ -63,7 +63,7 @@ $(RELEASE_DIR):
 
 
 build-number:
-	..\..\build\c\increment-build-number.exe build-number.h
+	#../../build/c/increment-build-number.exe build-number.h
 
 remake: clean all
 

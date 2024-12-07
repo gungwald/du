@@ -58,8 +58,8 @@
 #define MEBIBYTE 0x100000
 #define GIBIBYTE 0x40000000
 
-static void printFileSize(wchar_t *path, unsigned long size);
-static unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel);
+static void printFileSize(wchar_t *path, int64_t size);
+static int64_t calcDiskUsage(wchar_t *path, bool isTopLevel);
 static void setup();
 static void du(int argc, const wchar_t *argv[]);
 static const wchar_t *getEnvironmentVariable(const wchar_t *name);
@@ -80,12 +80,12 @@ int wmain(int argc, const wchar_t *argv[])
 
 static const wchar_t *getEnvironmentVariable(const wchar_t *name)
 {
-    wchar_t *value;
+    wchar_t *value = L"";
     DWORD reqSize;
-    const DWORD GEV_FAILURE = 0;
+    const DWORD GETENVVAR_FAILURE = 0;
     DWORD win32ApiError;
 
-    if ((reqSize = GetEnvironmentVariable(name, value, 0)) == GEV_FAILURE) {
+    if ((reqSize = GetEnvironmentVariable(name, value, 0)) == GETENVVAR_FAILURE) {
         win32ApiError = GetLastError();
         if (win32ApiError == ERROR_ENVVAR_NOT_FOUND) {
             value = L"";
@@ -94,11 +94,11 @@ static const wchar_t *getEnvironmentVariable(const wchar_t *name)
             exit(EXIT_FAILURE);
         }
     }
-    if ((value = (wchar_t *) GC_MALLOC(reqSize)) == NULL) {
+    if ((value = (wchar_t *) GC_MALLOC(reqSize * sizeof(wchar_t))) == NULL) {
         writeError(errno, L"Failed to allocate memory for environment variable value for", name);
         exit(EXIT_FAILURE);
     }
-    if (GetEnvironmentVariable(name, value, reqSize) == GEV_FAILURE) {
+    if (GetEnvironmentVariable(name, value, reqSize) == GETENVVAR_FAILURE) {
         writeLastError(GetLastError(), L"Failed to get environment variable", name);
         exit(EXIT_FAILURE);
     }
@@ -147,6 +147,7 @@ static void du(int argc, const wchar_t *argv[])
     wchar_t *argument;
 
     fileArgs = setSwitches(argc, argv);
+    printStringList(fileArgs);
     if (getListSize(fileArgs) > 0) {
         for (node = fileArgs; !isListEmpty(node); node = skipListItem(node)) {
             argument = removeListItem(&fileArgs);
@@ -158,7 +159,7 @@ static void du(int argc, const wchar_t *argv[])
     }
 }
 
-void printFileSize(wchar_t *path, unsigned long size) {
+void printFileSize(wchar_t *path, int64_t size) {
     double hrSize;
     if (humanReadable) {
         if (size >= GIBIBYTE) {
@@ -171,7 +172,7 @@ void printFileSize(wchar_t *path, unsigned long size) {
             hrSize = ((double) size) / ((double) KIBIBYTE);
             _tprintf(_T("%2.1fK\t%ls\n"), hrSize, path);
         } else {
-            _tprintf(_T("%-2lu\t%ls\n"), size, path);
+            _tprintf(_T("%-2I64d\t%ls\n"), size, path);
         }
     } else {
         if (!displayBytes) {
@@ -182,16 +183,15 @@ void printFileSize(wchar_t *path, unsigned long size) {
                 }
             }
         }
-        wprintf(L"%-7lu %ls\n", size, path);
+        wprintf(L"%-7I64d %ls\n", size, path);
     }
     fflush(stdout);
 }
 
-unsigned long calcDiskUsage(wchar_t *path, bool isTopLevel) {
-    unsigned long size = 0;
-    List *entries;
-    List *entry;
-
+int64_t calcDiskUsage(wchar_t *path, bool isTopLevel) {
+    int64_t size = 0;
+    List* entries;
+    List* entry;
     if (isFile(path)) {
         size = getFileSize(path);
         if (displayRegularFilesAlso || isTopLevel) {

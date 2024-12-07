@@ -1,20 +1,17 @@
-.PHONY: all src src-build release
+.PHONY: all du release
 
-all: src-build src
+all: du
 
-release: src-build
-	$(MAKE) -C src/main/c release
+release:
+	$(MAKE) -C du release
 	
-src:
-	$(MAKE) -C src/main/c
-	
-src-build:
-	$(MAKE) -C src/build/c
+du:
+	$(MAKE) -C du
 	
 test:
-	$(MAKE) -C test/main/c
+	$(MAKE) -C test
 	
 clean:
-	$(MAKE) -C src/build/c clean
-	$(MAKE) -C src/main/c clean
-	$(MAKE) -C src/test/c clean
+	$(MAKE) -C du clean
+	$(MAKE) -C test clean
+

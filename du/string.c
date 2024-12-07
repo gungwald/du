@@ -6,6 +6,9 @@
 #include "string.h"
 #include "error.h"
 
+/* Turn off security warnings about string functions. The correct amount of space is always allocated. */
+#pragma warning(disable : 4996)
+
 bool isGlob(const wchar_t *s)
 {
     return wcschr(s, L'*') != NULL || wcschr(s, L'?') != NULL;
