@@ -7,6 +7,7 @@
 #include "string.h"
 #include "filename.h"
 #include "registry.h"
+#include "heap.h"
 
 #define REGISTRY_ENVIRONMENT_KEY_NAME _T("Environment")
 #define REGISTRY_USER_PATH_VALUE_NAME _T("Path")
@@ -77,11 +78,7 @@ TCHAR *getRegistryStringData(HKEY key, const TCHAR *valueName)
     status = RegGetValue(key, NULL, valueName, RRF_RT_ANY, NULL, NULL, &requiredBufferSizeInBytes);
     if (status == ERROR_MORE_DATA || status == ERROR_SUCCESS) {
         /* This is what we wanted to happen. Now we know the required size. */
-        data = (TCHAR *) GC_MALLOC(requiredBufferSizeInBytes);
-        if (data == NULL) {
-            writeError(errno, _T("Failed to allocate memory for registry data"), valueName);
-            exit(EXIT_FAILURE);
-        }
+        data = allocateStringBytes(requiredBufferSizeInBytes);
         retrievedDataSize = requiredBufferSizeInBytes;
         status = RegGetValue(key, NULL, valueName, RRF_RT_ANY, &dataType, data, &retrievedDataSize);
         if (status != ERROR_SUCCESS) {

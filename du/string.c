@@ -5,6 +5,7 @@
 #include <gc.h>
 #include "string.h"
 #include "error.h"
+#include "heap.h"
 
 /* Turn off security warnings about string functions. The correct amount of space is always allocated. */
 #pragma warning(disable : 4996)
@@ -20,13 +21,9 @@ wchar_t *concat(const wchar_t *left, const wchar_t *right)
     wchar_t *result;
 
     capacity = wcslen(left) + wcslen(right) + 1;
-    if ((result = (wchar_t *) GC_MALLOC(capacity * sizeof(wchar_t))) == NULL) {
-        writeError2(errno, L"GC_MALLOC failed for concat", left, right);
-        exit(EXIT_FAILURE);
-    } else {
-        wcscpy(result, left);
-        wcscat(result, right);
-    }
+    result = allocateString(capacity);
+    wcscpy(result, left);
+    wcscat(result, right);
     return result;
 }
 
@@ -38,15 +35,10 @@ wchar_t *concat3(const wchar_t *first,
     wchar_t *result;
 
     reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
-    result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
-    if (result == NULL) {
-        writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
-        exit(EXIT_FAILURE);
-    } else {
-        wcscpy(result, first);
-        wcscat(result, second);
-        wcscat(result, third);
-    }
+    result = allocateString(reqSize);
+    wcscpy(result, first);
+    wcscat(result, second);
+    wcscat(result, third);
     return result;
 }
 
@@ -59,16 +51,11 @@ wchar_t *concat4(const wchar_t *first,
     wchar_t *result;
 
     reqSize = wcslen(first) + wcslen(second) + wcslen(third) + wcslen(fourth)+ 1;
-    result = (wchar_t *) malloc(reqSize * sizeof(wchar_t));
-    if (result == NULL) {
-        writeError3(errno, L"GC_MALLOC failed concat3", first, second, third);
-        exit(EXIT_FAILURE);
-    } else {
-        wcscpy(result, first);
-        wcscat(result, second);
-        wcscat(result, third);
-        wcscat(result, fourth);
-    }
+    result = allocateString(reqSize);
+    wcscpy(result, first);
+    wcscat(result, second);
+    wcscat(result, third);
+    wcscat(result, fourth);
     return result;
 }
 
@@ -94,14 +81,9 @@ char *convertToUtf8(const wchar_t *wstr)
 
     /* Will include string terminator because of -1 argument. */
     reqSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-    utf8 = (char *) GC_MALLOC(reqSize);
-    if (utf8) {
-        /* Includes string terminator because of -1 argument. */
-        WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,reqSize,NULL,NULL);
-    } else {
-        _wperror(L"Failed alloc memory for UTF-8 string");
-        exit(EXIT_FAILURE);
-    }
+    utf8 = allocateUTF8String(reqSize);
+    /* Includes string terminator because of -1 argument. */
+    WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,reqSize,NULL,NULL);
     return utf8;
 }
 
@@ -110,13 +92,9 @@ char **convertAllToUtf8(int argc, const TCHAR *argv[])
     char **utf8StringArray;
     int i;
 
-    utf8StringArray = (char **) malloc(sizeof(char *) * argc);
+    utf8StringArray = allocateUTF8PointerArray(argc);
     for (i = 0; i < argc; i++) {
-#ifdef UNICODE
         utf8StringArray[i] = convertToUtf8(argv[i]);
-#else
-        utf8StringArray[i] = strdup(argv[i]);
-#endif
     }
     return utf8StringArray;
 }
@@ -163,12 +141,7 @@ wchar_t *createStringCopy(const wchar_t *s) {
     wchar_t *copy;
 
     size = wcslen(s) + 1;
-    copy = (wchar_t *) GC_MALLOC(size * sizeof(wchar_t *));
-    if (copy) {
-        wcscpy(copy, s);
-    } else {
-        _wperror(L"Failed to allocate memory for string copy");
-        exit(EXIT_FAILURE);
-    }
+    copy = allocateString(size);
+    wcscpy(copy, s);
     return copy;
 }

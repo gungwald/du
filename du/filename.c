@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wctype.h>     /* iswalpha */
-#include <gc.h>         /* GC_MALLOC */
 #include <windows.h>
 #include "filename.h"
 #include "string.h"
 #include "error.h"
 #include "trace.h"
 #include "args.h"
+#include "heap.h"
 
 /* Turn off security warnings about string functions. The correct amount of space is always allocated. */
 #pragma warning(disable : 4996)
@@ -35,24 +35,17 @@ wchar_t* getAbsolutePath(const wchar_t *path) {
     /* Ask for the size of the buffer needed to hold the absolute path. */
     reqSize = GetFullPathName(path, 0, NULL, NULL);
     if (reqSize == 0) {
-        writeLastError(GetLastError(), L"failed to get required buf size",
-                path);
+        writeLastError(GetLastError(), L"Failed to get required buf size", path);
         exit(EXIT_FAILURE);
     } else {
-        absolutePath = (wchar_t*) GC_MALLOC(reqSize * sizeof(wchar_t));
-        if (absolutePath == NULL) {
-            writeError(errno, _T("memory alloc failed for abs path of"), path);
+        absolutePath = allocateString(reqSize);
+        returnedLen = GetFullPathName(path, reqSize, absolutePath, NULL);
+        if (returnedLen == 0) {
+            writeLastError(GetLastError(), L"failed to get full path", path);
             exit(EXIT_FAILURE);
-        } else {
-            returnedLen = GetFullPathName(path, reqSize, absolutePath, NULL);
-            if (returnedLen == 0) {
-                writeLastError(GetLastError(), L"failed to get full path",
-                        path);
-                exit(EXIT_FAILURE);
-            } else if (returnedLen >= reqSize) {
-                writeLastError(GetLastError(), L"buffer not big enough", path);
-                exit(EXIT_FAILURE);
-            }
+        } else if (returnedLen >= reqSize) {
+            writeLastError(GetLastError(), L"buffer not big enough", path);
+            exit(EXIT_FAILURE);
         }
     }
     return absolutePath;
@@ -72,11 +65,7 @@ wchar_t* getParentPath(const wchar_t *path) {
     }
     lastBackslashPointer = wcsrchr(absPath, L'\\');
     parentSize = lastBackslashPointer - absPath + 1;
-    parent = (wchar_t*) GC_MALLOC(parentSize * sizeof(wchar_t));
-    if (parent == NULL) {
-        writeError(errno, L"Failed to allocate memory for", path);
-        exit(EXIT_FAILURE);
-    }
+    parent = allocateString(parentSize);
     wcsncpy(parent, absPath, parentSize);
     free(absPath);
     return parent;

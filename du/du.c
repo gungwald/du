@@ -45,6 +45,7 @@
 #include "args.h"
 #include "help.h"
 #include "registry.h"
+#include "heap.h"
 
 /* Visual C++ 4.0 does not define this. */
 #ifndef INVALID_FILE_ATTRIBUTES
@@ -68,7 +69,6 @@ const wchar_t *programName;
 
 int wmain(int argc, const wchar_t *argv[])
 {
-    GC_INIT();
     programName = argv[0];
     if (startsWith(getSimpleName(programName), L"du-setup")) {
         setup();
@@ -81,11 +81,12 @@ int wmain(int argc, const wchar_t *argv[])
 static const wchar_t *getEnvironmentVariable(const wchar_t *name)
 {
     wchar_t *value = L"";
-    DWORD reqSize;
+    DWORD requiredSizeForValue;
     const DWORD GETENVVAR_FAILURE = 0;
     DWORD win32ApiError;
 
-    if ((reqSize = GetEnvironmentVariable(name, value, 0)) == GETENVVAR_FAILURE) {
+    /* GetEnvironmentVariable returns the size in chars, including the null terminator char. */
+    if ((requiredSizeForValue = GetEnvironmentVariable(name, value, 0)) == GETENVVAR_FAILURE) {
         win32ApiError = GetLastError();
         if (win32ApiError == ERROR_ENVVAR_NOT_FOUND) {
             value = L"";
@@ -94,11 +95,10 @@ static const wchar_t *getEnvironmentVariable(const wchar_t *name)
             exit(EXIT_FAILURE);
         }
     }
-    if ((value = (wchar_t *) GC_MALLOC(reqSize * sizeof(wchar_t))) == NULL) {
-        writeError(errno, L"Failed to allocate memory for environment variable value for", name);
-        exit(EXIT_FAILURE);
-    }
-    if (GetEnvironmentVariable(name, value, reqSize) == GETENVVAR_FAILURE) {
+
+    value = allocateString(requiredSizeForValue);
+
+    if (GetEnvironmentVariable(name, value, requiredSizeForValue) == GETENVVAR_FAILURE) {
         writeLastError(GetLastError(), L"Failed to get environment variable", name);
         exit(EXIT_FAILURE);
     }
@@ -138,6 +138,8 @@ static void setup()
     }
     /* Update user PATH in registry */
     addElementToRegistryUserPath(binDir);
+    freeString(homeDir);
+    freeString(binDir);
 }
 
 static void du(int argc, const wchar_t *argv[])
