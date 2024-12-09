@@ -2,7 +2,6 @@
 #include <stdlib.h>                 /* EXIT_FAILURE */
 #include <stdbool.h>                /* bool, true, false */
 #include <lmerr.h>
-#include <gc.h>
 #include "error.h"
 #include "string.h"
 #include "filename.h"

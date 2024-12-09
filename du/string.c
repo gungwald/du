@@ -1,8 +1,4 @@
-#include <stddef.h>
-#include <stdlib.h>
-#include <wchar.h>
-#include <ctype.h>      /* tolower */
-#include <gc.h>
+#include <strsafe.h>    /* StringCchLength */
 #include "string.h"
 #include "error.h"
 #include "heap.h"
@@ -17,11 +13,11 @@ bool isGlob(const wchar_t *s)
 
 wchar_t *concat(const wchar_t *left, const wchar_t *right)
 {
-    size_t capacity;
+    size_t requiredSize;
     wchar_t *result;
 
-    capacity = wcslen(left) + wcslen(right) + 1;
-    result = allocateString(capacity);
+    requiredSize = wcslen(left) + wcslen(right) + 1;
+    result = allocateString(requiredSize);
     wcscpy(result, left);
     wcscat(result, right);
     return result;
@@ -31,11 +27,11 @@ wchar_t *concat3(const wchar_t *first,
                  const wchar_t *second,
                  const wchar_t *third)
 {
-    size_t reqSize;
+    size_t requiredSize;
     wchar_t *result;
 
-    reqSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
-    result = allocateString(reqSize);
+    requiredSize = wcslen(first) + wcslen(second) + wcslen(third) + 1;
+    result = allocateString(requiredSize);
     wcscpy(result, first);
     wcscat(result, second);
     wcscat(result, third);
@@ -47,11 +43,11 @@ wchar_t *concat4(const wchar_t *first,
                  const wchar_t *third,
                  const wchar_t *fourth)
 {
-    size_t reqSize;
+    size_t requiredSize;
     wchar_t *result;
 
-    reqSize = wcslen(first) + wcslen(second) + wcslen(third) + wcslen(fourth)+ 1;
-    result = allocateString(reqSize);
+    requiredSize = wcslen(first) + wcslen(second) + wcslen(third) + wcslen(fourth)+ 1;
+    result = allocateString(requiredSize);
     wcscpy(result, first);
     wcscat(result, second);
     wcscat(result, third);
@@ -76,14 +72,14 @@ wchar_t *replaceAll(wchar_t *s, wchar_t searchFor, wchar_t replaceWith)
 
 char *convertToUtf8(const wchar_t *wstr)
 {
-    int reqSize; /* in bytes */
+    size_t requiredSize; /* in bytes */
     char *utf8;
 
     /* Will include string terminator because of -1 argument. */
-    reqSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-    utf8 = allocateUTF8String(reqSize);
+    requiredSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+    utf8 = allocateUTF8String(requiredSize);
     /* Includes string terminator because of -1 argument. */
-    WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,reqSize,NULL,NULL);
+    WideCharToMultiByte(CP_UTF8,0,wstr,-1,utf8,requiredSize,NULL,NULL);
     return utf8;
 }
 
@@ -140,8 +136,17 @@ wchar_t *createStringCopy(const wchar_t *s) {
     size_t size;
     wchar_t *copy;
 
-    size = wcslen(s) + 1;
+    size = findStringLength(s) + 1;
     copy = allocateString(size);
     wcscpy(copy, s);
     return copy;
+}
+
+size_t findStringLength(const wchar_t* s)
+{
+    size_t length;
+    if (FAILED(StringCchLength(s, STRSAFE_MAX_CCH, &length))) {
+        fail(L"Failed to find length of string");
+    }
+    return length;
 }

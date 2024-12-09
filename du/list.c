@@ -1,6 +1,5 @@
 #include <stdio.h>  /* fflush */
 #include <wchar.h>	/* wcsdup */
-#include <gc.h>
 #include "list.h"
 
 List* initList() {

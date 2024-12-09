@@ -1,16 +1,12 @@
 #include <stdio.h>  /* fflush */
 #include <stdlib.h> /* EXIT_FAILURE */
 #include <wchar.h>	/* wcsdup */
-#include <gc.h>
+#include "heap.h"
 #include "strlist.h"
 
 List* initList() {
     struct ListCtrlNode* n;
-    n = (struct ListCtrlNode*)GC_MALLOC(sizeof(struct ListCtrlNode));
-    if (n == NULL) {
-        _wperror(L"Failed to allocate memory for list");
-        exit(EXIT_FAILURE);
-    }
+    n = allocateListCtrlNode();
     n->first = NULL;
     n->cursor = NULL;
     n->last = NULL;
@@ -40,7 +36,7 @@ wchar_t* removeListItem(List* l) {
         l->cursor = n->next;        /* Advance cursor */
         l->size--;                  /* List does not contain n */
         value = n->data;
-        GC_FREE(n);
+        freeListNode(n);
     }
     return value;
 }
@@ -49,11 +45,7 @@ wchar_t* removeListItem(List* l) {
 List* appendListItem(List* l, wchar_t* data) {
     struct ListNode* toPutAtEnd;
 
-    toPutAtEnd = (struct ListNode*)GC_MALLOC(sizeof(struct ListNode));
-    if (toPutAtEnd == NULL) {
-        _wperror(L"Failed to allocate memory for new list item");
-        exit(EXIT_FAILURE);
-    }
+    toPutAtEnd = allocateListNode();
     toPutAtEnd->data = data;
     toPutAtEnd->next = NULL;
 

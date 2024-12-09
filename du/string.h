@@ -17,6 +17,7 @@ extern bool endsWithChar(const wchar_t *s, wchar_t c);
 extern bool stringContains(const wchar_t *container, const wchar_t *value);
 extern wchar_t *createStringCopy(const wchar_t *s);
 extern wchar_t *toLowerCase(const wchar_t *s);
+extern size_t findStringLength(const wchar_t* s);
 
 #endif
 

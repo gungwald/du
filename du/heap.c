@@ -34,7 +34,29 @@ void freeString(wchar_t* s)
 void freeUTF8String(char* s)
 {
     if (HeapFree(GetProcessHeap(), 0, s) == FALSE) {
-        writeLastError(GetLastError(), L"Failed to free memory for UTF-8 string");
+        writeLastError(GetLastError(), L"Failed to free memory for UTF-8 string", L"non-printable");
     }
 }
 
+struct ListCtrlNode* allocateListCtrlNode()
+{
+    return (struct ListCtrlNode *) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(struct ListCtrlNode));
+}
+
+struct ListNode* allocateListNode()
+{
+    return (struct ListNode *) HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(struct ListNode));
+}
+
+void freeListCtrlNode(struct ListCtrlNode* n)
+{
+    if (HeapFree(GetProcessHeap(), 0, n) == FALSE) {
+        writeLastError(GetLastError(), L"Failed to free memory for list control node", L"non-printable");
+    }
+}
+void freeListNode(struct ListNode* n)
+{
+    if (HeapFree(GetProcessHeap(), 0, n) == FALSE) {
+        writeLastError(GetLastError(), L"Failed to free memory for list node", n->data);
+    }
+}

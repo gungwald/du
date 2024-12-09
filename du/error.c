@@ -89,3 +89,8 @@ void writeLastError2(DWORD lastError, const TCHAR* message, const TCHAR* object1
     _ftprintf(stderr, _TEXT("%ls: %ls: %ls and %ls: "), programName, message, object1, object2);
     displayErrorText(lastError);
 }
+
+void fail(TCHAR* message)
+{
+    WriteConsole
+}
