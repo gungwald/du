@@ -2,7 +2,8 @@ CC=x86_64-w64-mingw32-gcc
 CC=i686-w64-mingw32-gcc
 LDFLAGS=-municode
 # Using -l:libgc.a causes libwinpthreads to get dynamically linked, but this does not:
-LDLIBS=-Wl,-Bstatic -lgc
+# Transitioning away from -lgc
+LDLIBS=-Wl,-Bstatic
 CFLAGS=-DUNICODE -D_UNICODE -municode -Wall
 TARGET=du.exe
 INSTALLER=du-setup.exe

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wctype.h>     /* iswalpha */
-#include <gc.h>         /* GC_MALLOC */
+#include "gc.h"         /* GC_MALLOC */
 #include <windows.h>
 #include "filename.h"
 #include "string.h"

@@ -36,7 +36,7 @@
 #include <stdbool.h>
 #include <windows.h>
 #include <wchar.h>
-#include <gc.h>
+#include "gcswitch.h"
 #include "filename.h"
 #include "string.h"
 #include "error.h"
